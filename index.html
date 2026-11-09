@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Topluluk Merkezi Takipçisi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wood:#7a4a24; --wood-d:#4e2c12; --wood-l:#a86a35;
+  --parch:#f6e4b5; --parch-d:#e2c786; --ink:#3b2412;
+  --green:#5aa02c; --green-d:#33701a; --gold:#f0b93a; --sky:#8fd0ee;
+  --done:#cfe8a8;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:'Pixelify Sans',system-ui,sans-serif; color:var(--ink);
+  background:
+    linear-gradient(180deg,#8fd0ee 0,#cfeaf3 220px,transparent 220px),
+    repeating-linear-gradient(90deg,#6fae3c 0 32px,#68a636 32px 64px);
+  background-color:#6fae3c; min-height:100vh;
+}
+header{
+  text-align:center; padding:28px 16px 8px;
+}
+header h1{
+  margin:0; font-size:clamp(28px,5vw,48px); color:#fff; letter-spacing:1px;
+  text-shadow:0 3px 0 var(--wood-d),0 0 0 #000, 3px 3px 0 var(--wood-d), -2px 2px 0 var(--wood-d);
+}
+header p{margin:6px 0 0; color:var(--wood-d); font-weight:600}
+.wrap{max-width:1180px; margin:0 auto; padding:0 16px 60px}
+.panel{
+  background:var(--parch); border:4px solid var(--wood-d); border-radius:10px;
+  box-shadow:0 0 0 3px var(--wood-l), 0 6px 0 3px var(--wood-d);
+}
+.overall{margin:20px 0; padding:16px 20px; display:flex; gap:18px; align-items:center; flex-wrap:wrap}
+.overall .big{font-size:34px; font-weight:700; min-width:90px}
+.bar{flex:1; min-width:200px; height:26px; background:var(--wood-d); border-radius:6px; padding:3px; position:relative}
+.bar>i{display:block; height:100%; width:0; background:linear-gradient(var(--green),var(--green-d)); border-radius:4px; transition:width .4s}
+.bar.gold>i{background:linear-gradient(#ffd75e,#d89a12)}
+.tools{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+input[type=search]{
+  font:inherit; padding:8px 12px; border:3px solid var(--wood-d); border-radius:6px; background:#fff8e1; color:var(--ink); width:220px;
+}
+button{
+  font:inherit; font-weight:600; cursor:pointer; padding:8px 14px; color:#fff;
+  background:var(--wood); border:3px solid var(--wood-d); border-radius:6px; box-shadow:0 3px 0 var(--wood-d);
+}
+button:hover{background:var(--wood-l)}
+button:active{transform:translateY(2px); box-shadow:0 1px 0 var(--wood-d)}
+button.ghost{background:#b5513a}
+
+.rooms{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:22px}
+.room{
+  cursor:pointer; padding:12px 10px; text-align:center; background:var(--wood); color:#fff;
+  border:4px solid var(--wood-d); border-radius:10px; box-shadow:0 4px 0 var(--wood-d); transition:transform .1s;
+  font:inherit;
+}
+.room:hover{transform:translateY(-3px); background:var(--wood-l)}
+.room.active{background:var(--parch); color:var(--ink); box-shadow:0 0 0 3px var(--gold),0 4px 0 3px var(--wood-d)}
+.room .ico{font-size:30px; line-height:1.1}
+.room .nm{font-weight:700; font-size:17px}
+.room .pg{font-size:14px; opacity:.9}
+.room .mini{height:8px; background:rgba(0,0,0,.35); border-radius:4px; margin-top:6px; overflow:hidden}
+.room .mini i{display:block; height:100%; background:var(--gold); width:0}
+.room.complete .nm::after{content:" ✓"; color:var(--gold)}
+.room.active.complete .nm::after{color:var(--green-d)}
+
+.room-head{padding:14px 20px; margin-bottom:18px; display:flex; gap:14px; align-items:center; flex-wrap:wrap}
+.room-head h2{margin:0; font-size:26px}
+.room-head .rw{margin-left:auto; background:var(--wood); color:#fff; padding:6px 12px; border-radius:6px; border:3px solid var(--wood-d)}
+
+.bundles{display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:18px}
+.bundle{padding:0; overflow:hidden; transition:filter .2s}
+.bundle.done{background:var(--done)}
+.bundle .top{
+  display:flex; align-items:center; gap:10px; padding:10px 14px;
+  background:linear-gradient(var(--wood-l),var(--wood)); color:#fff; border-bottom:4px solid var(--wood-d);
+}
+.bundle.done .top{background:linear-gradient(#78b83c,var(--green-d))}
+.bundle .top .bi{font-size:26px}
+.bundle .top h3{margin:0; font-size:19px; flex:1; text-shadow:1px 1px 0 rgba(0,0,0,.4)}
+.bundle .cnt{background:rgba(0,0,0,.35); padding:2px 9px; border-radius:12px; font-size:15px; white-space:nowrap}
+.bundle .sub{padding:8px 14px 0; font-size:14px; display:flex; justify-content:space-between; gap:8px; opacity:.85}
+.items{display:grid; grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); gap:8px; padding:10px 12px 14px}
+.item{
+  position:relative; text-align:center; padding:8px 4px 6px; cursor:pointer; user-select:none;
+  background:#fff8e1; border:3px solid var(--parch-d); border-radius:8px; font:inherit; color:inherit;
+  transition:transform .08s, background .15s;
+}
+.item:hover{transform:translateY(-2px); border-color:var(--wood-l)}
+.item .pic{width:48px; height:48px; margin:0 auto 4px; display:flex; align-items:center; justify-content:center; font-size:30px}
+.item img{width:40px; height:40px; image-rendering:pixelated; object-fit:contain}
+.item .n{font-size:13px; line-height:1.15; font-weight:600; min-height:30px; display:flex; align-items:center; justify-content:center}
+.item .q{position:absolute; top:2px; right:4px; font-size:13px; font-weight:700; background:var(--wood); color:#fff; border-radius:8px; padding:0 6px}
+.item .star{position:absolute; top:2px; left:4px; font-size:14px; color:#e8a400; text-shadow:0 0 2px #fff}
+.item .chk{
+  position:absolute; inset:0; border-radius:5px; display:none; align-items:center; justify-content:center;
+  background:rgba(90,160,44,.55); font-size:42px; color:#fff; text-shadow:0 2px 0 var(--green-d);
+}
+.item.on{background:#e3f4c8; border-color:var(--green)}
+.item.on .chk{display:flex}
+.item.dim{opacity:.4}
+.item.hit{outline:4px solid var(--gold); background:#fff3b0}
+.item.hide{display:none}
+.bundle.hide{display:none}
+.vault .item .pic{font-size:34px}
+.foot{text-align:center; margin-top:34px; color:var(--wood-d); font-size:14px}
+.foot a{color:var(--wood-d)}
+
+.toast{
+  position:fixed; left:50%; bottom:24px; transform:translate(-50%,120px); transition:transform .35s;
+  background:var(--parch); border:4px solid var(--wood-d); border-radius:10px; padding:12px 22px; font-weight:700; z-index:9;
+  box-shadow:0 4px 0 var(--wood-d);
+}
+.toast.show{transform:translate(-50%,0)}
+
+.item{padding-bottom:18px}
+.item .ssn{position:absolute; left:4px; bottom:2px; font-size:11px; line-height:1}
+.item .info{
+  position:absolute; right:3px; bottom:3px; width:20px; height:20px; border-radius:50%; background:var(--wood); color:#fff;
+  font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid var(--wood-d); z-index:2;
+}
+.item .info:hover{background:var(--gold); color:var(--ink)}
+.modal{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:20; padding:16px}
+.modal.open{display:flex}
+.mcard{max-width:460px; width:100%; max-height:88vh; overflow:auto; padding:18px 20px; position:relative}
+.mcard .x{position:absolute; top:8px; right:10px; padding:2px 10px}
+.mh{display:flex; gap:12px; align-items:center; margin-bottom:10px}
+.mh img{width:56px; height:56px; image-rendering:pixelated; object-fit:contain; background:#fff8e1; border:3px solid var(--parch-d); border-radius:8px; padding:4px}
+.mh h3{margin:0; font-size:22px} .mh small{opacity:.7}
+.row{display:flex; gap:10px; padding:8px 0; border-top:2px dashed var(--parch-d); line-height:1.35}
+.row>span{font-size:20px}
+.wl{display:inline-block; margin-top:10px; color:var(--wood-d); font-weight:600}
+
+.tabs{display:flex; gap:8px; margin:14px 0 6px; flex-wrap:wrap; justify-content:center}
+.tab{font-size:17px; padding:10px 18px; border-radius:10px 10px 4px 4px}
+.tab.active{background:var(--parch); color:var(--ink); box-shadow:0 0 0 3px var(--gold),0 4px 0 3px var(--wood-d)}
+[hidden]{display:none !important}
+.dim{opacity:.7}
+.foot{line-height:1.5}
+/* hediyeler */
+.gtop{padding:12px 16px; margin:16px 0 14px; display:flex; gap:14px; align-items:center; flex-wrap:wrap}
+.gtop select,.gtools select{font:inherit; padding:6px 8px; border:3px solid var(--wood-d); border-radius:6px; background:#fff8e1; color:var(--ink)}
+.gbtns{display:flex; gap:8px; flex-wrap:wrap}
+.gstat{margin-left:auto}
+.bday{padding:10px 16px; margin-bottom:12px; background:#fff0a8}
+.bsoon{padding:10px 16px; margin-bottom:12px}
+.bchip{display:inline-flex; align-items:center; gap:4px; background:#fff; border:2px solid var(--gold); border-radius:20px; padding:0 10px 0 4px; font-weight:700}
+.mini{width:26px; height:26px; image-rendering:pixelated}
+.gtools{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px}
+.vgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px}
+.vcard{padding:12px 14px}
+.vcard.full{background:var(--done)}
+.vcard.isb{box-shadow:0 0 0 3px var(--gold),0 6px 0 3px var(--wood-d)}
+.vh{display:flex; gap:10px; align-items:center; margin-bottom:8px}
+.vh .por{width:56px; height:56px; object-fit:contain; image-rendering:pixelated; background:#fff8e1; border:3px solid var(--parch-d); border-radius:8px}
+.vh h3{margin:0; font-size:20px} .vh small{opacity:.8}
+.vbtn{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px}
+.tg{background:#b9a06a; border-color:#7d6a3e; box-shadow:0 3px 0 #7d6a3e; padding:8px 4px; font-size:15px}
+.tg.on{background:var(--green); border-color:var(--green-d); box-shadow:0 3px 0 var(--green-d)}
+.vmeta{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:15px}
+.hrt button{padding:0 8px; font-size:15px; box-shadow:0 2px 0 var(--wood-d)}
+.hrt b.ok{color:var(--green-d)}
+.lt{font-size:13px; opacity:.75}
+.loves{display:flex; flex-wrap:wrap; gap:6px; margin-top:4px}
+.gi{display:inline-flex; align-items:center; gap:4px; background:#fff8e1; border:2px solid var(--parch-d); border-radius:16px; padding:1px 8px 1px 2px; font-size:13px; line-height:1.1}
+.gi img{width:24px; height:24px; image-rendering:pixelated; object-fit:contain}
+/* mükemmeliyet */
+.poverall{padding:16px 20px; margin:16px 0 10px; display:flex; gap:18px; align-items:center; flex-wrap:wrap}
+.poverall .big{font-size:36px; font-weight:700; min-width:120px}
+.poverall .bar{flex:1; min-width:200px}
+.bar.gold>i{background:linear-gradient(#ffd75e,#d89a12)}
+.note{margin:0 4px 14px; font-size:14px; color:var(--wood-d)}
+.pgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; align-items:start}
+.pcard{padding:12px 14px}
+.pcard.done{background:var(--done)}
+.ph{display:flex; align-items:center; gap:8px; margin-bottom:6px}
+.ph h3{margin:0; font-size:19px; flex:1}
+.pw{background:var(--wood); color:#fff; border-radius:10px; padding:0 8px; font-size:14px}
+.pv{font-weight:700}
+.pbar{height:12px; background:var(--wood-d); border-radius:6px; padding:2px; margin-bottom:8px}
+.pbar i{display:block; height:100%; background:linear-gradient(var(--green),var(--green-d)); border-radius:4px}
+.hint{font-size:14px; margin:8px 0 0; opacity:.9; line-height:1.4}
+.hint a,.foot a{color:var(--wood-d)}
+.cnt{display:flex; gap:6px; align-items:center; flex-wrap:wrap}
+.cnt input{width:76px; font:inherit; text-align:center; padding:6px; border:3px solid var(--wood-d); border-radius:6px; background:#fff8e1}
+.cnt button,.skr button{padding:4px 9px; box-shadow:0 2px 0 var(--wood-d)}
+.cks{display:grid; gap:6px}
+.ck{display:flex; align-items:flex-start; gap:8px; padding:6px 8px; background:#fff8e1; border:2px solid var(--parch-d); border-radius:8px; cursor:pointer; line-height:1.25}
+.ck input{display:none}
+.ck .bx{width:22px; height:22px; flex:none; border:3px solid var(--wood-d); border-radius:5px; background:#fff; color:transparent; display:flex; align-items:center; justify-content:center; font-size:15px; margin-top:1px}
+.ck.on{background:#e3f4c8; border-color:var(--green)}
+.ck.on .bx{background:var(--green); border-color:var(--green-d); color:#fff}
+.ck .tx small{display:block; font-size:13px; opacity:.75}
+.sk{display:grid; gap:6px}
+.skr{display:flex; align-items:center; gap:8px}
+.skr span{flex:1}
+.pend{display:flex; flex-wrap:wrap; gap:6px; font-size:14px; margin:8px 0}
+.pend>b{width:100%}
+.pend span{background:#fff8e1; border:2px solid var(--parch-d); border-radius:14px; padding:0 8px}
+.ok{color:var(--green-d); font-weight:700}
+.go{margin-top:6px}
+.sec{margin:28px 4px 12px; color:var(--wood-d); text-shadow:0 1px 0 #fff8}
+@media(max-width:560px){ .bundles{grid-template-columns:1fr} .overall .big{font-size:28px} input[type=search]{width:100%} }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="h1">🌾 Topluluk Merkezi 🌾</h1>
+  <p>Stardew Valley yardımcın — işaretle, takip et, unutma!</p>
+</header>
+
+<div class="wrap">
+  <nav class="tabs"><button class="tab active" data-view="cc">🏛️ Topluluk Merkezi</button><button class="tab" data-view="perf">🏆 Mükemmeliyet</button><button class="tab" data-view="gift">🎁 Hediyeler</button></nav>
+  <div id="v-cc">
+  <div class="panel overall">
+    <div class="big" id="ovPct">0%</div>
+    <div class="bar" id="ovBar"><i></i></div>
+    <div id="ovTxt">0 / 30 paket</div>
+    <div class="tools">
+      <input type="search" id="q" placeholder="🔍 Eşya ara… (ör. Yaban Havucu)">
+      <button class="ghost" id="reset">Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="rooms" id="rooms"></div>
+  <div class="panel room-head" id="roomHead"></div>
+  <div class="bundles" id="bundles"></div>
+
+  <div class="foot">
+    <b>i</b> butonu: nerede, saat, mevsim, hava. İlerlemen tarayıcında otomatik kaydedilir. Görseller ve veriler
+    <a href="https://tr.stardewvalleywiki.com/Y%C4%B1%C4%9F%C4%B1nlar" target="_blank" rel="noopener">Stardew Valley Wiki</a>'den alınmıştır; eşya adları oyunun Türkçe çevirisine göre.
+  </div>
+  </div><!-- v-cc -->
+  <div id="v-perf" hidden></div>
+  <div id="v-gift" hidden></div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal"><div class="panel mcard"><button class="x" data-close>✕</button><div id="mBody"></div></div></div>
+
+<script>
+const WIKI = 'https://stardewvalleywiki.com/Special:FilePath/';
+// i(name, qty, opts) -> item. opts: {img, gold(altın kalite), emoji}
+const i = (n, q = 1, o = {}) => ({ n, q, ...o });
+const G = { gold: true };
+
+const ROOMS = [
+ { id:'crafts', name:'Crafts Room', ico:'🪵', reward:'Ödül: Köprü onarımı (Quarry)', bundles:[
+  { name:'Spring Foraging', ico:'🌸', reward:'30 Spring Seeds', need:4, items:[i('Wild Horseradish'),i('Daffodil'),i('Leek'),i('Dandelion')] },
+  { name:'Summer Foraging', ico:'☀️', reward:'30 Summer Seeds', need:3, items:[i('Grape'),i('Spice Berry'),i('Sweet Pea')] },
+  { name:'Fall Foraging', ico:'🍂', reward:'30 Fall Seeds', need:4, items:[i('Common Mushroom'),i('Wild Plum'),i('Hazelnut'),i('Blackberry')] },
+  { name:'Winter Foraging', ico:'❄️', reward:'30 Winter Seeds', need:4, items:[i('Winter Root'),i('Crystal Fruit'),i('Snow Yam'),i('Crocus')] },
+  { name:'Construction', ico:'🔨', reward:'Charcoal Kiln', need:4, items:[i('Wood',99),i('Wood',99,{key:'w2'}),i('Stone',99),i('Hardwood',10)] },
+  { name:'Exotic Foraging', ico:'🥥', reward:'5 Autumn\'s Bounty', need:5, items:[i('Coconut'),i('Cactus Fruit'),i('Cave Carrot'),i('Red Mushroom'),i('Purple Mushroom'),i('Maple Syrup'),i('Oak Resin'),i('Pine Tar'),i('Morel')] },
+ ]},
+ { id:'pantry', name:'Pantry', ico:'🥕', reward:'Ödül: Sera (Greenhouse) onarımı', bundles:[
+  { name:'Spring Crops', ico:'🌱', reward:'Speed-Gro x20', need:4, items:[i('Parsnip'),i('Green Bean'),i('Cauliflower'),i('Potato')] },
+  { name:'Summer Crops', ico:'🍅', reward:'Quality Sprinkler', need:4, items:[i('Tomato'),i('Hot Pepper'),i('Blueberry'),i('Melon')] },
+  { name:'Fall Crops', ico:'🎃', reward:'Bee House', need:4, items:[i('Corn'),i('Eggplant'),i('Pumpkin'),i('Yam')] },
+  { name:'Quality Crops', ico:'⭐', reward:'Preserves Jar', need:4, items:[i('Parsnip',5,G),i('Melon',5,G),i('Pumpkin',5,G),i('Corn',5,G)] },
+  { name:'Animal', ico:'🐄', reward:'Cheese Press', need:5, items:[i('Large Milk'),i('Large Egg (Brown)'),i('Large Egg (White)'),i('Large Goat Milk'),i('Wool'),i('Duck Egg')] },
+  { name:'Artisan', ico:'🍯', reward:'Keg', need:6, items:[i('Truffle Oil'),i('Cloth'),i('Goat Cheese'),i('Cheese'),i('Honey'),i('Jelly'),i('Apple'),i('Apricot'),i('Orange'),i('Peach'),i('Pomegranate'),i('Cherry')] },
+ ]},
+ { id:'fish', name:'Fish Tank', ico:'🐟', reward:'Ödül: Panning (Glittering Boulder) açılır', bundles:[
+  { name:'River Fish', ico:'🏞️', reward:'30 Bait', need:4, items:[i('Sunfish'),i('Catfish'),i('Shad'),i('Tiger Trout')] },
+  { name:'Lake Fish', ico:'🌊', reward:'Dressed Spinner', need:4, items:[i('Largemouth Bass'),i('Carp'),i('Bullhead'),i('Sturgeon')] },
+  { name:'Ocean Fish', ico:'🐠', reward:'Warp Totem: Beach x5', need:4, items:[i('Sardine'),i('Tuna'),i('Red Snapper'),i('Tilapia')] },
+  { name:'Night Fishing', ico:'🌙', reward:'Small Glow Ring', need:3, items:[i('Walleye'),i('Bream'),i('Eel')] },
+  { name:'Specialty Fish', ico:'🎣', reward:'5 Dish O\' The Sea', need:4, items:[i('Pufferfish'),i('Ghostfish'),i('Sandfish'),i('Woodskip')] },
+  { name:'Crab Pot', ico:'🦀', reward:'3 Crab Pot', need:5, items:[i('Lobster'),i('Crayfish'),i('Crab'),i('Cockle'),i('Mussel'),i('Shrimp'),i('Snail'),i('Periwinkle'),i('Oyster'),i('Clam')] },
+ ]},
+ { id:'boiler', name:'Boiler Room', ico:'🔥', reward:'Ödül: Minecart ulaşımı açılır', bundles:[
+  { name:'Blacksmith\'s', ico:'⚒️', reward:'Furnace', need:3, items:[i('Copper Bar'),i('Iron Bar'),i('Gold Bar')] },
+  { name:'Geologist\'s', ico:'💎', reward:'Omni Geode x5', need:4, items:[i('Quartz'),i('Earth Crystal'),i('Frozen Tear'),i('Fire Quartz')] },
+  { name:'Adventurer\'s', ico:'⚔️', reward:'Small Magnet Ring', need:2, items:[i('Slime',99),i('Bat Wing',10),i('Solar Essence'),i('Void Essence')], needNote:'4\'ten 2\'si' },
+ ]},
+ { id:'bulletin', name:'Bulletin Board', ico:'📌', reward:'Ödül: Mağaza ve arkadaşlık bonusları', bundles:[
+  { name:'Chef\'s', ico:'👨‍🍳', reward:'Pink Cake', need:6, items:[i('Maple Syrup'),i('Fiddlehead Fern'),i('Truffle'),i('Poppy'),i('Maki Roll'),i('Fried Egg')] },
+  { name:'Dye', ico:'🎨', reward:'Seed Maker', need:6, items:[i('Red Mushroom'),i('Sea Urchin'),i('Sunflower'),i('Duck Feather'),i('Aquamarine'),i('Red Cabbage')] },
+  { name:'Field Research', ico:'🔬', reward:'Recycling Machine', need:4, items:[i('Purple Mushroom'),i('Nautilus Shell'),i('Chub'),i('Frozen Geode')] },
+  { name:'Fodder', ico:'🌾', reward:'Heater', need:3, items:[i('Wheat',10),i('Hay',10),i('Apple',3)] },
+  { name:'Enchanter\'s', ico:'🔮', reward:'Gold Bar x5', need:4, items:[i('Oak Resin'),i('Wine'),i('Rabbit\'s Foot'),i('Pomegranate')] },
+ ]},
+ { id:'vault', name:'Vault', ico:'💰', reward:'Ödül: Otobüs onarımı (Calico Desert)', vault:true, bundles:[
+  { name:'2,500g', ico:'🪙', reward:'3 Chocolate Cake', need:1, items:[i('2,500g',1,{img:'Gold.png',emoji:'🪙'})] },
+  { name:'5,000g', ico:'🪙', reward:'30 Quality Fertilizer', need:1, items:[i('5,000g',1,{img:'Gold.png',emoji:'🪙'})] },
+  { name:'10,000g', ico:'🪙', reward:'30 Lightning Rod', need:1, items:[i('10,000g',1,{img:'Gold.png',emoji:'🪙'})] },
+  { name:'25,000g', ico:'🪙', reward:'Crystalarium', need:1, items:[i('25,000g',1,{img:'Gold.png',emoji:'🪙'})] },
+ ]},
+ { id:'missing', name:'Missing Bundle', ico:'🎬', reward:'Sinema Salonu', bundles:[
+  { name:'Missing Bundle', ico:'🎬', reward:'Sinema Salonu', need:6, items:[i('Wine',1,{key:'silver'}),i('Dinosaur Mayonnaise'),i('Prismatic Shard'),i('Ancient Fruit',5,G),i('Void Salmon',1,G),i('Caviar')] },
+ ]},
+];
+
+// ---- durum ----
+const KEY = 'sdv-cc-v1';
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+const iid = (r, b, it, idx) => `${r.id}|${b.name}|${idx}`;
+const checked = (r, b) => b.items.filter((it, idx) => state[iid(r, b, it, idx)]).length;
+const bundleDone = (r, b) => checked(r, b) >= b.need;
+const roomDone = r => r.bundles.every(b => bundleDone(r, b));
+const total = () => ROOMS.reduce((s, r) => s + r.bundles.length, 0);
+const doneCount = () => ROOMS.reduce((s, r) => s + r.bundles.filter(b => bundleDone(r, b)).length, 0);
+
+let cur = 'crafts';
+const $ = s => document.querySelector(s);
+const toast = msg => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2600); };
+
+
+// ---- Türkçe (oyunun Türkçe çevirisine göre) ----
+const TR = {"Wild Horseradish":"Yabani Bayır Turpu","Daffodil":"Fulya","Leek":"Pırasa","Dandelion":"Kara Hindiba","Grape":"Üzüm","Spice Berry":"Baharat Meyvesi","Sweet Pea":"Itırşahi","Common Mushroom":"Mantar","Wild Plum":"Çakaleriği","Hazelnut":"Fındık","Blackberry":"Böğürtlen","Winter Root":"Kış Kökü","Crystal Fruit":"Kristal Meyve","Snow Yam":"Kar Patatesi","Crocus":"Çiğdem","Wood":"Odun","Stone":"Taş","Hardwood":"Kereste","Coconut":"Hindistan Cevizi","Cactus Fruit":"Kaktüs Meyvesi","Cave Carrot":"Mağara Havucu","Red Mushroom":"Kırmızı Mantar","Purple Mushroom":"Mor Mantar","Maple Syrup":"Akçaağaç Pekmezi","Oak Resin":"Meşe Reçinesi","Pine Tar":"Çam Katranı","Morel":"Kuzumantarı","Parsnip":"Yaban Havucu","Green Bean":"Yeşil Fasulye","Cauliflower":"Karnabahar","Potato":"Patates","Tomato":"Domates","Hot Pepper":"Acı Biber","Blueberry":"Yaban Mersini","Melon":"Kavun","Corn":"Mısır","Eggplant":"Patlıcan","Pumpkin":"Bal Kabağı","Yam":"Tatlı Patates","Large Milk":"Büyük Süt","Large Egg (Brown)":"Büyük Yumurta (Kahverengi)","Large Egg (White)":"Büyük Yumurta","Large Goat Milk":"Büyük Keçi Sütü","Wool":"Yün","Duck Egg":"Ördek Yumurtası","Truffle Oil":"Yermantarı Yağı","Cloth":"Kumaş","Goat Cheese":"Keçi Peyniri","Cheese":"Peynir","Honey":"Bal","Jelly":"Reçel","Apple":"Elma","Apricot":"Kayısı","Orange":"Portakal","Peach":"Şeftali","Pomegranate":"Nar","Cherry":"Kiraz","Sunfish":"Güneşbalığı","Catfish":"Kedibalığı","Shad":"Tirsi","Tiger Trout":"Kaplanbalığı","Largemouth Bass":"İri Ağızlı Levrek","Carp":"Sazanbalığı","Bullhead":"Yayınbalığı","Sturgeon":"Mersinbalığı","Sardine":"Sardalya","Tuna":"Ton Balığı","Red Snapper":"Kırlangıç Balığı","Tilapia":"Tilapi","Walleye":"Kömür Balığı","Bream":"Mercanbalığı","Eel":"Yılanbalığı","Pufferfish":"Balon Balığı","Ghostfish":"Hayaletbalığı","Sandfish":"Kumbalığı","Woodskip":"Korkakbalık","Lobster":"Istakoz","Crayfish":"Kerevit","Crab":"Yengeç","Cockle":"Kum Midyesi","Mussel":"Midye","Shrimp":"Karides","Snail":"Salyangoz","Periwinkle":"Deniz Salyangozu","Oyster":"İstiridye","Clam":"Deniz Tarağı","Copper Bar":"Bakır Külçesi","Iron Bar":"Demir Külçesi","Gold Bar":"Altın Külçesi","Quartz":"Kuvars","Earth Crystal":"Yüzey Kristali","Frozen Tear":"Donmuş Gözyaşı","Fire Quartz":"Kızıl Kuvars","Slime":"Balçıkça","Bat Wing":"Yarasa Kanadı","Solar Essence":"Güneş Özü","Void Essence":"Boşluk Özü","Fiddlehead Fern":"Eğrelti Otu","Truffle":"Yermantarı","Poppy":"Haşhaş","Maki Roll":"Dilim Maki","Fried Egg":"Sahanda Yumurta","Sea Urchin":"Denizkestanesi","Sunflower":"Ayçiçeği","Duck Feather":"Ördek Tüyü","Aquamarine":"Gök Zümrütü","Red Cabbage":"Kırmızı Lahana","Nautilus Shell":"Notilus Kabuğu","Chub":"Kefal","Frozen Geode":"Donuk Jeot","Wheat":"Buğday","Hay":"Saman","Wine":"Şarap","Rabbit's Foot":"Tavşan Ayağı","Dinosaur Mayonnaise":"Dinozor Mayonezi","Prismatic Shard":"Prizma Parçası","Ancient Fruit":"Eski Meyve","Void Salmon":"Boşluk Somonu","Caviar":"Havyar"};
+const BN = {"Spring Foraging":"Bahar Bitkileri","Summer Foraging":"Yaz Bitkileri","Fall Foraging":"Güz Bitkileri","Winter Foraging":"Kış Bitkileri","Construction":"İnşaat","Exotic Foraging":"Egzotik Bitkiler","Spring Crops":"Bahar Ekinleri","Summer Crops":"Yaz Ekinleri","Fall Crops":"Güz Ekinleri","Quality Crops":"Kaliteli Ekinler","Animal":"Hayvan","Artisan":"Zanaat","River Fish":"Nehir Balıkları","Lake Fish":"Göl Balıkları","Ocean Fish":"Deniz Balıkları","Night Fishing":"Gece Balıkları","Specialty Fish":"Özel Balık","Crab Pot":"Yengeç Çömleği","Blacksmith's":"Demirci","Geologist's":"Yerbilimci","Adventurer's":"Maceraperest","Chef's":"Mutfak","Dye":"Boya","Field Research":"Saha Araştırması","Fodder":"Yem","Enchanter's":"Büyü","Missing Bundle":"Kayıp Yığın"};
+const RW = {"Spring Foraging":"Bahar Tohumları ×30","Summer Foraging":"Yaz Tohumları ×30","Fall Foraging":"Güz Tohumları ×30","Winter Foraging":"Kış Tohumları ×30","Construction":"Kömür Fırını","Exotic Foraging":"Güz Armağanı ×5","Spring Crops":"Hızlı-Ek ×20","Summer Crops":"Kaliteli Fıskiye","Fall Crops":"Arı Kovanı","Quality Crops":"Kavanoz","Animal":"Peynir Ezeceği","Artisan":"Fıçı","River Fish":"Deluxe Yem ×30","Lake Fish":"Süslü Yapay Yem","Ocean Fish":"Işınlanma Totemi: Kumsal ×5","Night Fishing":"Parıldayan Yüzük","Specialty Fish":"Deniz Öğünü ×5","Crab Pot":"Yengeç Çömleği ×3","Blacksmith's":"Ocak","Geologist's":"Bütünjeot ×5","Adventurer's":"Küçük Manyetik Yüzük","Chef's":"Pembe Pasta ×3","Dye":"Tohum Üreteci","Field Research":"Geri Dönüşüm Makinesi","Fodder":"Isıtıcı","Enchanter's":"Altın Külçesi ×5","2,500g":"Çikolatalı Pasta ×3","5,000g":"Kaliteli Gübre ×30","10,000g":"Paratoner","25,000g":"Kristalaryum","Missing Bundle":"Sinema Salonu"};
+const RN = {crafts:['Zanaat Odası','Ödül: Taş Ocağı köprüsü onarılır'],pantry:['Kiler','Ödül: Sera onarılır'],fish:['Balık Havuzu','Ödül: Altın yıkama (Panning) açılır'],boiler:['Kazan Dairesi','Ödül: Maden arabası ulaşımı açılır'],bulletin:['Duyuru Panosu','Tüm yığınları tamamla'],vault:['Mahzen','Ödül: Otobüs onarılır (Çöl)'],missing:['Kayıp Yığın (Sinema)','Ödül: Sinema Salonu — Topluluk Merkezi bitince terk edilmiş JojaMart\'ta açılır']};
+const tn = it => TR[it.n] || it.n;
+
+// ---- Eşya bilgileri: f(nerede, saat, mevsim[b=Bahar y=Yaz g=Güz k=Kış x=hepsi], hava, not) ----
+const f = (w, t, s, h, n) => ({ w, t, s, h, n });
+const SEZ = { b: '🌸 Bahar', y: '☀️ Yaz', g: '🍂 Güz', k: '❄️ Kış' };
+const FORAGE = 'Dış alanda yerden toplanır (Pelican Kasabası, Otobüs Durağı, Orman, Dağ…)';
+const INFO = {
+ // Toplayıcılık
+ 'Wild Horseradish': f(FORAGE, '', 'b', '', 'Yerden toplanan eşya; Toplayıcılık XP verir.'),
+ 'Daffodil': f(FORAGE, '', 'b'),
+ 'Leek': f(FORAGE, '', 'b'),
+ 'Dandelion': f(FORAGE, '', 'b'),
+ 'Grape': f(FORAGE, '', 'y', '', 'Üzüm asmasından da hasat edilir.'),
+ 'Spice Berry': f(FORAGE, '', 'y'),
+ 'Sweet Pea': f(FORAGE, '', 'y'),
+ 'Common Mushroom': f("Güz'de dış alanda; Gizli Koru'da (Secret Woods) her mevsim; Mantar Mağarası", '', 'g'),
+ 'Wild Plum': f(FORAGE, '', 'g'),
+ 'Hazelnut': f(FORAGE, '', 'g'),
+ 'Blackberry': f(FORAGE + ' (özellikle çalılıklardan)', '', 'g', '', "Güz'ün başlarında bol çıkar."),
+ 'Winter Root': f("Kış'ta toprağı çapa (hoe) ile kazarak çıkar; Madenler'de de bulunur", '', 'k', '', 'Yerdeki kıvrımlı çizgi noktalarını çapala.'),
+ 'Crystal Fruit': f(FORAGE, '', 'k'),
+ 'Snow Yam': f("Kış'ta kar üstündeki işaretli noktaları çapa ile kazarak çıkar", '', 'k'),
+ 'Crocus': f(FORAGE, '', 'k'),
+ 'Wood': f('Ağaçları baltayla kes; Çiftlik\'te çok ağaç var', '', 'x', '', 'İki ayrı yığın (99 + 99) gerekir.'),
+ 'Stone': f('Kayaları kazmayla kır; Çiftlik, Taş Ocağı, Madenler', '', 'x'),
+ 'Hardwood': f("Gizli Koru'daki Büyük Güdükler ve Büyük Kütükler; Bakır/Çelik Balta gerekir", '', 'x', '', 'Büyük Güdükler her gün yeniden büyür.'),
+ 'Coconut': f('Calico Çölü – hindistan cevizi ağaçları ve yerdeki toplanabilirler', '', 'x', '', "Otobüs onarılmadan Çöl'e gidilemez."),
+ 'Cactus Fruit': f('Calico Çölü – yerde toplanır; Kaktüs bitkisinden de çıkar', '', 'x'),
+ 'Cave Carrot': f('Madenler (çapa ile kazı yeri) ve Çiftlik Mağarası', '', 'x'),
+ 'Red Mushroom': f("Gizli Koru (Yaz ve Güz); Madenler 81-120. kat", '', 'yg'),
+ 'Purple Mushroom': f('Madenler 81-120. kat; Mantar Mağarası', '', 'x', '', "Çiftlik Mağarası'nda Mantar seçildiyse oradan da çıkar."),
+ 'Maple Syrup': f('Akçaağaç Ağacına Ağaç Musluğu (Tapper) tak', '', 'x', '', 'Yaklaşık 9 günde bir toplanır.'),
+ 'Oak Resin': f('Meşe Ağacına Ağaç Musluğu (Tapper) tak', '', 'x', '', 'Yaklaşık 7 günde bir toplanır.'),
+ 'Pine Tar': f('Çam Ağacına Ağaç Musluğu (Tapper) tak', '', 'x', '', 'Yaklaşık 5 günde bir toplanır.'),
+ 'Morel': f('Gizli Koru (Bahar ve Güz); Mantar Mağarası', '', 'bg'),
+ // Ekinler
+ 'Parsnip': f("Pierre'den tohum al, Çiftlik'e ek", '', 'b', '', '4 günde olgunlaşır.'),
+ 'Green Bean': f("Pierre'den Fasulye Çubuğu al, Çiftlik'e ek", '', 'b', '', '10 günde olgunlaşır, sonra tekrar tekrar verir.'),
+ 'Cauliflower': f("Pierre'den tohum al, Çiftlik'e ek", '', 'b', '', '12 günde olgunlaşır.'),
+ 'Potato': f("Pierre'den tohum al, Çiftlik'e ek", '', 'b', '', '6 günde olgunlaşır.'),
+ 'Tomato': f("Pierre'den tohum al, Çiftlik'e ek", '', 'y', '', '11 günde olgunlaşır, tekrar tekrar verir.'),
+ 'Hot Pepper': f("Pierre'den tohum al, Çiftlik'e ek", '', 'y', '', '5 günde olgunlaşır, tekrar tekrar verir.'),
+ 'Blueberry': f("Pierre'den tohum al, Çiftlik'e ek", '', 'y', '', '13 günde olgunlaşır; bir seferde birkaç meyve verir.'),
+ 'Melon': f("Pierre'den tohum al, Çiftlik'e ek", '', 'y', '', '12 günde olgunlaşır.'),
+ 'Corn': f("Pierre'den tohum al, Çiftlik'e ek", '', 'yg', '', '14 günde olgunlaşır; Yaz ve Güz boyunca yetişir.'),
+ 'Eggplant': f("Pierre'den tohum al, Çiftlik'e ek", '', 'g', '', '5 günde olgunlaşır.'),
+ 'Pumpkin': f("Pierre'den tohum al, Çiftlik'e ek", '', 'g', '', '13 günde olgunlaşır.'),
+ 'Yam': f("Pierre'den tohum al, Çiftlik'e ek", '', 'g', '', '10 günde olgunlaşır.'),
+ // Hayvan
+ 'Large Milk': f('İnek (Ahır) – mutlu ve sağlıklı inekten sağılır', '', 'x', '', 'Süt Kovası (Milk Pail) ile sağılır. Büyük süt şansı mutluluğa bağlı.'),
+ 'Large Egg (Brown)': f('Kahverengi Tavuk (Kümes)', '', 'x', '', 'Büyük yumurta şansı hayvanın mutluluğuna bağlı.'),
+ 'Large Egg (White)': f('Beyaz Tavuk (Kümes)', '', 'x', '', 'Büyük yumurta şansı hayvanın mutluluğuna bağlı.'),
+ 'Large Goat Milk': f('Keçi (Büyük Ahır)', '', 'x', '', 'Büyük Ahır gerekir.'),
+ 'Wool': f('Koyun (Büyük Ahır) – Makas (Shears) ile kırkılır', '', 'x', '', 'Büyük Ahır gerekir.'),
+ 'Duck Egg': f('Ördek (Büyük Kümes)', '', 'x', '', 'Büyük Kümes gerekir.'),
+ // Zanaat
+ 'Truffle Oil': f('Yermantarı Yağ Yapıcıya (Oil Maker) konur', '', 'x', '', 'Yermantarını domuzlar bulur.'),
+ 'Cloth': f('Yün Dokuma Tezgâhına (Loom) konur', '', 'x'),
+ 'Goat Cheese': f('Keçi Sütü Peynir Ezeceğine (Cheese Press) konur', '', 'x'),
+ 'Cheese': f('Süt Peynir Ezeceğine konur', '', 'x'),
+ 'Honey': f('Arı Kovanı (Bee House)', '', 'x', '', "Kış'ta bal üretmez."),
+ 'Jelly': f('Herhangi bir meyve/sebze Kavanoza (Preserves Jar) konur', '', 'x'),
+ 'Apple': f("Elma Ağacı – fidanı Pierre'den al, 28 günde meyve verir", '', 'g'),
+ 'Apricot': f("Kayısı Ağacı – fidanı Pierre'den al, 28 günde meyve verir", '', 'b'),
+ 'Orange': f("Portakal Ağacı – fidanı Pierre'den al, 28 günde meyve verir", '', 'y'),
+ 'Peach': f("Şeftali Ağacı – fidanı Pierre'den al, 28 günde meyve verir", '', 'y'),
+ 'Pomegranate': f("Nar Ağacı – fidanı Pierre'den al, 28 günde meyve verir", '', 'g'),
+ 'Cherry': f("Kiraz Ağacı – fidanı Pierre'den al, 28 günde meyve verir", '', 'b'),
+ // Balıklar
+ 'Sunfish': f('Nehir (Pelican Kasabası) ve Orman nehri', '06:00 – 19:00', 'by', 'Güneşli'),
+ 'Catfish': f("Nehir (Orman/Pelican); Gizli Koru", '06:00 – 02:00', 'bg', 'Yağmurlu', "Gizli Koru'da her mevsim yağmurda çıkar."),
+ 'Shad': f('Nehir (Pelican Kasabası)', '09:00 – 02:00', 'byg', 'Yağmurlu'),
+ 'Tiger Trout': f('Nehir (Pelican Kasabası, Orman nehri)', '06:00 – 19:00', 'gk', 'Her hava'),
+ 'Largemouth Bass': f('Dağ Gölü', '06:00 – 19:00', 'x', 'Her hava'),
+ 'Carp': f('Dağ Gölü, Gizli Koru, Kanalizasyon, Cadı Bataklığı', 'Gün boyu', 'byg', 'Her hava'),
+ 'Bullhead': f('Dağ Gölü', 'Gün boyu', 'x', 'Her hava'),
+ 'Sturgeon': f('Dağ Gölü', '06:00 – 19:00', 'yk', 'Her hava'),
+ 'Sardine': f('Okyanus (İskele / Kumsal)', '06:00 – 19:00', 'bgk', 'Her hava'),
+ 'Tuna': f('Okyanus (İskele / Kumsal)', '06:00 – 19:00', 'yk', 'Her hava'),
+ 'Red Snapper': f('Okyanus (İskele / Kumsal)', '06:00 – 19:00', 'yg', 'Yağmurlu'),
+ 'Tilapia': f('Okyanus (İskele / Kumsal)', '06:00 – 14:00', 'yg', 'Her hava'),
+ 'Walleye': f('Nehir, Dağ Gölü, Orman Gölü, Gizli Koru', '12:00 – 02:00', 'g', 'Yağmurlu'),
+ 'Bream': f('Nehir (Pelican Kasabası)', '18:00 – 02:00', 'x', 'Her hava'),
+ 'Eel': f('Okyanus (İskele / Kumsal)', '16:00 – 02:00', 'bg', 'Yağmurlu'),
+ 'Pufferfish': f('Okyanus (İskele / Kumsal); Ada\'da da tutulur', '12:00 – 16:00', 'y', 'Güneşli'),
+ 'Ghostfish': f('Madenler 20-60. kat (bazen düşmanlardan düşer)', 'Gün boyu', 'x', 'Her hava'),
+ 'Sandfish': f('Calico Çölü', '06:00 – 20:00', 'x', 'Her hava'),
+ 'Woodskip': f('Gizli Koru (Secret Woods)', 'Gün boyu', 'x', 'Her hava', 'Orman Çiftliği haritasında çiftlik göletinde de çıkar.'),
+ 'Chub': f('Orman nehri ve Dağ Gölü; Madenler\'in içindeki göllerde', 'Gün boyu', 'x', 'Her hava'),
+ // Yengeç çömleği
+ 'Lobster': f('Okyanus – Yengeç Çömleği (Crab Pot)', '', 'x', '', 'Çömleği suya, kıyıya yerleştir; her gün kontrol et.'),
+ 'Crab': f('Okyanus – Yengeç Çömleği', '', 'x'),
+ 'Shrimp': f('Okyanus – Yengeç Çömleği', '', 'x'),
+ 'Oyster': f('Okyanus – Yengeç Çömleği; Kumsal\'da kıyıdan da toplanır', '', 'x'),
+ 'Clam': f('Okyanus – Yengeç Çömleği; Kumsal\'da kıyıdan da toplanır', '', 'x'),
+ 'Cockle': f('Okyanus – Yengeç Çömleği; Kumsal\'da kıyıdan da toplanır', '', 'x'),
+ 'Mussel': f('Okyanus – Yengeç Çömleği; Kumsal\'da kıyıdan da toplanır', '', 'x'),
+ 'Crayfish': f('Tatlı su (nehir, göl) – Yengeç Çömleği', '', 'x'),
+ 'Snail': f('Tatlı su (nehir, göl) – Yengeç Çömleği', '', 'x'),
+ 'Periwinkle': f('Tatlı su (nehir, göl) – Yengeç Çömleği', '', 'x'),
+ // Kazan odası
+ 'Copper Bar': f('5 Bakır Cevheri + 1 Kömür → Ocak (Furnace)', '', 'x', '', 'Bakır cevheri Madenler 1-39. katta çıkar.'),
+ 'Iron Bar': f('5 Demir Cevheri + 1 Kömür → Ocak', '', 'x', '', 'Demir cevheri Madenler 40-79. katta çıkar.'),
+ 'Gold Bar': f('5 Altın Cevheri + 1 Kömür → Ocak', '', 'x', '', 'Altın cevheri Madenler 80+ katta çıkar.'),
+ 'Quartz': f('Madenler\'de kayalardan; Dağ çevresinde de toplanır', '', 'x'),
+ 'Earth Crystal': f('Madenler 1-39. kat (kayalardan ve düşmanlardan)', '', 'x'),
+ 'Frozen Tear': f('Madenler 40-79. kat (kayalardan ve düşmanlardan)', '', 'x'),
+ 'Fire Quartz': f('Madenler 80-120. kat; Kafatası Mağarası', '', 'x'),
+ 'Slime': f('Balçıkçalar (Slime) – Madenler; Çiftlik\'te Balçıkça Kafesi', '', 'x'),
+ 'Bat Wing': f('Madenler: Yarasalar', '', 'x'),
+ 'Solar Essence': f('Madenler\'deki Hayalet düşmanlar', '', 'x', '', 'Düşmanlardan düşme şansı vardır.'),
+ 'Void Essence': f('Madenler\'de Gölge yaratıkları ve Yarasalar', '', 'x', '', 'Düşmanlardan düşme şansı vardır.'),
+ // Duyuru panosu
+ 'Fiddlehead Fern': f('Gizli Koru (Secret Woods)', '', 'y', '', "Sadece Yaz'da toplanır."),
+ 'Truffle': f('Domuzlar bulur (domuzu dışarı çıkar)', '', 'x', '', "Domuz kış dışında dışarıda otlamalı."),
+ 'Poppy': f("Pierre'den Haşhaş Tohumu al ve ek", '', 'y'),
+ 'Maki Roll': f('Mutfakta pişir: Pirinç + Yosun + herhangi bir balık', '', 'x', '', 'Tarif için wiki\'ye bak.'),
+ 'Fried Egg': f('Mutfakta pişir: 1 Yumurta', '', 'x', '', 'Başlangıç tarifi.'),
+ 'Sea Urchin': f("Kumsal'da (Beach) kıyıdan toplanır", '', 'x'),
+ 'Sunflower': f('Tohumları Pierre\'den al; Yaz-Güz\'de yetişir', '', 'yg', '', '8 günde olgunlaşır.'),
+ 'Duck Feather': f('Ördek (Büyük Kümes) – mutlu ördekten düşer', '', 'x'),
+ 'Aquamarine': f('Madenler 40-120. kat, kayalardan ve jeotlardan', '', 'x'),
+ 'Red Cabbage': f("Pierre'den tohum al, Yaz'da ek", '', 'y', '', "Tohum Pierre'de 2. yıldan itibaren satılır."),
+ 'Nautilus Shell': f("Kumsal – Kış'ta kıyıdan toplanır", '', 'k'),
+ 'Frozen Geode': f('Madenler 40-79. kat', '', 'x', '', "Clint'e (demirci) götürüp kırdır."),
+ 'Wheat': f("Tohumları Pierre'den al; Yaz-Güz'de yetişir", '', 'yg', '', '4 günde olgunlaşır.'),
+ 'Hay': f('Orakla çim biç → Silo\'ya (Samanlık) otomatik atılır', '', 'x', '', "Silo'dan alınır."),
+ 'Wine': f('Herhangi bir meyveyi Fıçıya (Keg) koy', '', 'x', '', 'Kayıp Yığın için gümüş ya da daha iyi kalite gerekir (Fıçı\'da bekletince yükselir).'),
+ 'Dinosaur Mayonnaise': f('Dinozor Yumurtası\'nı Mayonez Makinesine koy', '', 'x', '', 'Dinozor Yumurtası: Müze/Eserler, Kafatası Mağarası.'),
+ 'Prismatic Shard': f('Madenler/Kafatası Mağarası\'nda çok nadir; Bütünjeotlardan düşebilir', '', 'x', '', 'Çok nadirdir.'),
+ 'Ancient Fruit': f('Eski Meyve Tohumu (Ancient Seed) ekilir – tohum Müze\'de Eserler\'den üretilir', '', 'byg', '', '5 adet, altın kalite gerekir. 28 günde olgunlaşır, tekrar tekrar verir.'),
+ 'Void Salmon': f('Cadı Bataklığı (Witch\'s Swamp)', '', 'x', 'Her hava', 'Altın veya İridyum kalite gerekir.'),
+ 'Caviar': f('Mersinbalığı Yumurtası (Sturgeon Roe) Kavanoza (Preserves Jar) konur', '', 'x', '', 'Mersinbalığı: Dağ Gölü, Yaz-Kış.'),
+ "Rabbit's Foot": f('Tavşan (Büyük Kümes) – mutlu tavşan arada bir bırakır', '', 'x'),
+};
+const infoOf = n => INFO[n] || null;
+const seasonKeys = s => !s ? [] : s === 'x' ? ['b','y','g','k'] : s.split('');
+const seasonBadge = it => { const i = infoOf(it.n); if (!i || !i.s || i.s === 'x') return ''; return `<div class="ssn">${seasonKeys(i.s).map(k => SEZ[k].slice(0, 2)).join('')}</div>`; };
+
+
+// Wiki'deki gerçek dosya yolları (hash klasörleri)
+const H = {"Wild_Horseradish":"9/90","Daffodil":"4/4b","Leek":"5/57","Dandelion":"b/b1","Grape":"c/c2","Spice_Berry":"c/c6","Sweet_Pea":"d/d9","Common_Mushroom":"2/2e","Wild_Plum":"3/3b","Hazelnut":"3/31","Blackberry":"2/25","Winter_Root":"1/11","Crystal_Fruit":"1/16","Snow_Yam":"3/3f","Crocus":"2/2f","Wood":"d/df","Stone":"d/d4","Hardwood":"e/ed","Coconut":"2/2f","Cactus_Fruit":"3/32","Cave_Carrot":"3/34","Red_Mushroom":"e/e1","Purple_Mushroom":"4/4b","Maple_Syrup":"6/6a","Oak_Resin":"4/40","Pine_Tar":"c/ce","Morel":"b/b1","Parsnip":"d/db","Green_Bean":"5/5c","Cauliflower":"a/aa","Potato":"c/c2","Tomato":"9/9d","Hot_Pepper":"f/f1","Blueberry":"9/9e","Melon":"1/19","Corn":"f/f8","Eggplant":"8/8f","Pumpkin":"6/64","Yam":"5/52","Large_Milk":"6/67","Large_Brown_Egg":"9/91","Large_Egg":"5/5d","Large_Goat_Milk":"f/f2","Wool":"3/34","Duck_Egg":"3/31","Truffle_Oil":"3/3d","Cloth":"5/51","Goat_Cheese":"c/c8","Cheese":"a/a5","Honey":"c/c6","Jelly":"0/05","Apple":"7/7d","Apricot":"f/fc","Orange":"4/43","Peach":"e/e2","Pomegranate":"1/1b","Cherry":"2/20","Sunfish":"5/56","Catfish":"9/99","Shad":"e/ef","Tiger_Trout":"0/01","Largemouth_Bass":"1/11","Carp":"a/a8","Bullhead":"d/db","Sturgeon":"4/42","Sardine":"0/04","Tuna":"c/c5","Red_Snapper":"d/d3","Tilapia":"7/73","Walleye":"0/05","Bream":"8/82","Eel":"9/91","Pufferfish":"b/ba","Ghostfish":"7/72","Sandfish":"b/bb","Woodskip":"9/97","Lobster":"9/9f","Crayfish":"5/53","Crab":"6/63","Cockle":"a/ad","Mussel":"a/aa","Shrimp":"9/91","Snail":"d/d2","Periwinkle":"1/1d","Oyster":"5/54","Clam":"e/ed","Copper_Bar":"f/f1","Iron_Bar":"6/6c","Gold_Bar":"4/4e","Quartz":"c/cf","Earth_Crystal":"7/74","Frozen_Tear":"e/ec","Fire_Quartz":"5/5b","Slime":"3/38","Bat_Wing":"3/35","Solar_Essence":"f/f4","Void_Essence":"1/1f","Fiddlehead_Fern":"4/48","Truffle":"f/f2","Poppy":"3/37","Maki_Roll":"b/b6","Fried_Egg":"1/18","Sea_Urchin":"e/e7","Sunflower":"8/81","Duck_Feather":"f/f9","Aquamarine":"a/a2","Red_Cabbage":"2/2d","Nautilus_Shell":"a/a4","Chub":"b/bd","Frozen_Geode":"b/bf","Wheat":"e/e2","Hay":"a/aa","Wine":"6/69","Rabbit's_Foot":"c/ca","Gold":"1/10","Dinosaur_Mayonnaise":"c/c3","Prismatic_Shard":"5/56","Ancient_Fruit":"0/01","Void_Salmon":"a/ad","Caviar":"8/89"};
+const FILE = { 'Large Egg (Brown)':'Large_Brown_Egg', 'Large Egg (White)':'Large_Egg' };
+function imgUrl(it) {
+  const f = it.img ? it.img.replace('.png', '') : (FILE[it.n] || it.n.replace(/ /g, '_'));
+  return H[f] ? `https://stardewvalleywiki.com/mediawiki/images/${H[f]}/${encodeURIComponent(f)}.png` : '';
+}
+
+function renderRooms() {
+  $('#rooms').innerHTML = ROOMS.map(r => {
+    const d = r.bundles.filter(b => bundleDone(r, b)).length;
+    return `<button class="room ${r.id === cur ? 'active' : ''} ${roomDone(r) ? 'complete' : ''}" data-room="${r.id}">
+      <div class="ico">${r.ico}</div><div class="nm">${RN[r.id][0]}</div>
+      <div class="pg">${d} / ${r.bundles.length}</div>
+      <div class="mini"><i style="width:${d / r.bundles.length * 100}%"></i></div></button>`;
+  }).join('');
+}
+
+function renderOverall() {
+  const d = doneCount(), t = total(), p = Math.round(d / t * 100);
+  $('#ovPct').textContent = p + '%';
+  $('#ovBar').firstElementChild.style.width = p + '%';
+  $('#ovBar').classList.toggle('gold', d === t);
+  $('#ovTxt').textContent = d === t ? '🎉 Topluluk Merkezi tamamlandı!' : `${d} / ${t} paket`;
+}
+
+function renderBundles() {
+  const r = ROOMS.find(x => x.id === cur);
+  $('#roomHead').innerHTML = `<h2>${r.ico} ${RN[r.id][0]}</h2><span>${r.bundles.filter(b => bundleDone(r, b)).length}/${r.bundles.length} paket</span><span class="rw">${RN[r.id][1]}</span>`;
+  const box = $('#bundles');
+  box.className = 'bundles' + (r.vault ? ' vault' : '');
+  box.innerHTML = r.bundles.map((b, bi) => {
+    const c = checked(r, b), done = c >= b.need;
+    const needTxt = b.need === b.items.length ? `Hepsi (${b.need})` : `${b.items.length} eşyadan ${b.need}`;
+    return `<section class="panel bundle ${done ? 'done' : ''}" data-b="${bi}">
+      <div class="top"><span class="bi">${b.ico}</span><h3>${BN[b.name] || b.name}</h3><span class="cnt">${Math.min(c, b.need)}/${b.need}</span></div>
+      <div class="sub"><span>${needTxt}</span><span>🎁 ${RW[b.name] || b.reward}</span></div>
+      <div class="items">${b.items.map((it, idx) => {
+        const on = !!state[iid(r, b, it, idx)];
+        const dim = done && !on;
+        return `<button class="item ${on ? 'on' : ''} ${dim ? 'dim' : ''}" data-i="${idx}" data-name="${(it.n + ' ' + tn(it)).toLowerCase()}" title="${tn(it)}${it.q > 1 ? ' ×' + it.q : ''}">
+          ${it.gold ? '<span class="star">★</span>' : ''}${it.q > 1 ? `<span class="q">×${it.q}</span>` : ''}
+          <div class="pic"><img loading="lazy" src="${imgUrl(it)}" alt="" data-emoji="${it.emoji || '❔'}"></div>
+          <div class="n">${tn(it)}</div>${seasonBadge(it)}<span class="info" data-info="${idx}" title="Detay">i</span><span class="chk">✔</span></button>`;
+      }).join('')}</div></section>`;
+  }).join('');
+  box.querySelectorAll('img').forEach(im => im.addEventListener('error', () => {
+    // wiki zaman zaman 503 veriyor: bir kez tekrar dene, olmazsa emoji göster
+    if (!im.dataset.retry) { im.dataset.retry = 1; const s = im.src; setTimeout(() => { im.src = s + '?r=1'; }, 1500); return; }
+    im.replaceWith(Object.assign(document.createElement('span'), { textContent: im.dataset.emoji }));
+  }));
+  applySearch();
+}
+
+
+function openInfo(it) {
+  const i = infoOf(it.n) || {};
+  const sez = i.s ? (i.s === 'x' ? 'Tüm mevsimler' : seasonKeys(i.s).map(k => SEZ[k]).join(', ')) : '';
+  const hv = i.h && (i.h === 'Güneşli' ? '☀️ Güneşli' : i.h === 'Yağmurlu' ? '🌧️ Yağmurlu' : '🌤️ ' + i.h);
+  const rows = [['📍', 'Nerede / Nasıl', i.w], ['🕐', 'Saat', i.t], ['📅', 'Mevsim', sez], ['🌦️', 'Hava', hv], ['📝', 'Not', i.n]]
+    .filter(r => r[2]).map(r => `<div class="row"><span>${r[0]}</span><div><b>${r[1]}</b><br>${r[2]}</div></div>`).join('');
+  const extra = it.gold ? '<div class="row"><span>⭐</span><div><b>Kalite</b><br>Altın kalite olmalı</div></div>' : '';
+  const page = (FILE[it.n] || it.n).replace(/ \(.*\)/, '').replace(/ /g, '_');
+  $('#mBody').innerHTML = `<div class="mh"><img src="${imgUrl(it)}" alt=""><div><h3>${tn(it)}</h3><small>${it.n}${it.q > 1 ? ' · ×' + it.q : ''}</small></div></div>${rows}${extra}
+    <a class="wl" target="_blank" rel="noopener" href="https://stardewvalleywiki.com/${encodeURIComponent(page)}">Wiki'de aç ↗</a>`;
+  $('#modal').classList.add('open');
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-close]') || e.target.id === 'modal') $('#modal').classList.remove('open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#modal').classList.remove('open'); });
+
+function applySearch() {
+  const q = $('#q').value.trim().toLowerCase();
+  document.querySelectorAll('.item').forEach(el => el.classList.toggle('hit', !!q && el.dataset.name.includes(q)));
+  if (q) {
+    // eşleşen eşyası olan odaları vurgula, mevcut odada eşleşmeyenleri soluklaştır
+    document.querySelectorAll('.bundle').forEach(b => b.classList.toggle('hide', !b.querySelector('.item.hit')));
+  } else document.querySelectorAll('.bundle').forEach(b => b.classList.remove('hide'));
+}
+
+function refresh(keepScroll) { renderRooms(); renderOverall(); renderBundles(); }
+
+document.addEventListener('click', e => {
+  const room = e.target.closest('[data-room]');
+  if (room) { cur = room.dataset.room; refresh(); return; }
+  const inf = e.target.closest('.info');
+  if (inf) {
+    const r = ROOMS.find(x => x.id === cur), bi = +inf.closest('.bundle').dataset.b;
+    openInfo(r.bundles[bi].items[+inf.dataset.info]); return;
+  }
+  const item = e.target.closest('.item');
+  if (item) {
+    const r = ROOMS.find(x => x.id === cur);
+    const bi = +item.closest('.bundle').dataset.b, b = r.bundles[bi], idx = +item.dataset.i;
+    const k = iid(r, b, b.items[idx], idx), wasDone = bundleDone(r, b), wasRoom = roomDone(r), wasAll = doneCount() === total();
+    if (state[k]) delete state[k]; else state[k] = 1;
+    save();
+    const y = scrollY; refresh(); scrollTo(0, y);
+    if (!wasDone && bundleDone(r, b)) toast(`✨ ${BN[b.name] || b.name} yığını tamamlandı! Ödül: ${RW[b.name]}`);
+    if (!wasRoom && roomDone(r)) toast(`🏆 ${RN[r.id][0]} tamamlandı!`);
+    if (!wasAll && doneCount() === total()) toast('🎉 Tüm Topluluk Merkezi tamamlandı! Junimo\'lar çok mutlu!');
+  }
+});
+$('#q').addEventListener('input', applySearch);
+$('#reset').addEventListener('click', () => {
+  if (confirm('Tüm ilerleme silinsin mi?')) { state = {}; save(); refresh(); }
+});
+refresh();
+</script>
+<script>
+
+// =====================================================================
+//  ORTAK YARDIMCILAR
+// =====================================================================
+const IMGB = 'https://stardewvalleywiki.com/mediawiki/images/';
+function imgFb(el) {
+  const n = +el.dataset.t || 0; el.dataset.t = n + 1; const p = el.dataset.p;
+  if (n === 0) el.src = IMGB + (p.startsWith('en/') ? p.slice(3) : 'en/' + p);
+  else if (n === 1) setTimeout(() => { el.src = IMGB + p + '?r=1'; }, 1200);
+  else { const s = document.createElement('span'); s.textContent = el.dataset.e || '🎁'; el.replaceWith(s); }
+}
+const pimg = (p, e, cls = '') => `<img class="${cls}" loading="lazy" src="${IMGB}${p}" data-p="${p}" data-e="${e || ''}" alt="" onerror="imgFb(this)">`;
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } };
+const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// =====================================================================
+//  SEKMELER
+// =====================================================================
+let view = 'cc'; try { view = localStorage.getItem('sdv-view') || 'cc'; } catch (e) {}
+function setView(v) {
+  view = v; try { localStorage.setItem('sdv-view', v); } catch (e) {}
+  ['cc', 'perf', 'gift'].forEach(k => { $('#v-' + k).hidden = k !== v; });
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  const H1 = { cc: '🌾 Topluluk Merkezi 🌾', perf: '🏆 Mükemmeliyet Yolu 🏆', gift: '🎁 Hediyeler & Dostluk 🎁' };
+  $('#h1').textContent = H1[v];
+  if (v === 'perf') renderPerf();
+  if (v === 'gift') renderGift();
+}
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { setView(b.dataset.view); scrollTo(0, 0); }));
+
+// =====================================================================
+//  KÖYLÜLER (veri: Stardew Valley Wiki – Türkçe)
+//  [id, Türkçe ad, doğum günü mevsimi, gün, portre, evlenilebilir(1/0), sevdiği hediyeler]
+// =====================================================================
+const GP = {
+ 'Ametist':'2/2e/Amethyst.png','Böğürtlen Kobler':'7/70/Blackberry_Cobbler.png','Çikolatalı Pasta':'8/87/Chocolate_Cake.png','Balon Balığı':'b/ba/Pufferfish.png','Bal Kabağı':'6/64/Pumpkin.png','Canavar Külliyatı':'1/15/Monster_Compendium.png','Baharatlı Yılanbalığı':'f/f2/Spicy_Eel.png','Muzlu Muhallebi':'4/40/Banana_Pudding.png','Çilek':'6/6d/Strawberry.png','Dondurma':'5/5d/Ice_Cream.png','Fasulye Yahnisi':'2/24/Bean_Hotpot.png','Sütlaç':'e/ec/Rice_Pudding.png','Bütün Kahvaltı':'3/3d/Complete_Breakfast.png','Önüne, Arkana, Her Yanına Bak':'c/c2/Jack_Be_Nimble%2C_Jack_Be_Thick.png','Pişmiş Somon':'8/8b/Salmon_Dinner.png','Balıklı Tako':'d/d5/Fish_Taco.png','Yeşil Çay':'8/8f/Green_Tea.png','Yazpulu':'9/9f/Summer_Spangle.png','Tropik Köri':'3/32/Tropical_Curry.png','Altın Külçesi':'4/4e/Gold_Bar.png','Bütünjeot':'0/09/Omni_Geode.png','Eğrelti Otlu Pilav':'2/2d/Fiddlehead_Risotto.png','Enginar Ezmesi':'7/77/Artichoke_Dip.png','Gök Zümrütü':'a/a2/Aquamarine.png','İridyum Külçesi':'c/c4/Iridium_Bar.png','Topaz':'a/a5/Topaz.png','Yakut':'a/a9/Ruby.png','Yeşim':'7/7e/Jade.png','Zümrüt':'6/6a/Emerald.png','Pancar':'a/a4/Beet.png','Elmas':'e/ea/Diamond.png','Perigülü':'5/5c/Fairy_Rose.png','Doldurma':'9/9a/Stuffing.png','Lale':'c/cf/Tulip.png','Mantar Kızartma':'4/4a/Fried_Mushroom.png','Pırasa':'5/57/Leek.png','Açburger':'8/87/Survival_Burger.png','Kumaş':'5/51/Cloth.png','Papağan Yumurtası':'d/dc/Parrot_Egg.png','Yün':'3/34/Wool.png','Istakoz':'9/9f/Lobster.png','Mürekkepbalığı Mürekkebi':'a/ac/Squid_Ink.png','Nar':'1/1b/Pomegranate.png','Ördek Tüyü':'f/f9/Duck_Feather.png','Tavuklu Ceviz Çorbası':'3/3b/Tom_Kha_Soup.png','Yengeçli Kek':'7/70/Crab_Cakes.png','Limontaşı':'3/31/Lemon_Stone.png','Çıtır Levrek':'5/53/Crispy_Bass.png','Parmesanlı Patlıcan':'7/73/Eggplant_Parmesan.png','Yılanbalığı Tava':'8/84/Fried_Eel.png','Gözleme':'6/6b/Pancakes.png','Uşkun Turtası':'2/21/Rhubarb_Pie.png','Türlü':'0/0a/Vegetable_Medley.png','Hindistan Cevizi':'2/2f/Coconut.png','Meyve Salatası':'9/9e/Fruit_Salad.png','Pembe Pasta':'3/32/Pink_Cake.png','Ayçiçeği':'8/81/Sunflower.png','Kızarmış Salyangoz':'7/78/Escargot.png','Portakal':'4/43/Orange.png','Eski Bebek':'c/c0/Ancient_Doll.png','Peri Kutusu':'7/7c/Fairy_Box.png','Erikli Muhallebi':'a/a0/Plum_Pudding.png','Garip Bebek (yeşil)':'3/39/Strange_Doll_%28green%29.png','Garip Bebek (sarı)':'e/ef/Strange_Doll_%28yellow%29.png','Kahve':'e/e9/Coffee.png','Şarap':'6/69/Wine.png','Süper Öğün':'d/d2/Super_Meal.png','Turşu':'c/c7/Pickles.png','Yermantarı Yağı':'3/3d/Truffle_Oil.png','Mango':'3/38/Mango.png','Deve Kuşu Yumurtası':'c/c3/Ostrich_Egg.png','Poi':'f/f1/Poi.png','Haşhaşlı Kek':'8/8e/Poppyseed_Muffin.png','Keçi Peyniri':'c/c8/Goat_Cheese.png','Salata':'7/7e/Salad.png','Vogda Kızartma':'e/ed/Stir_Fry.png','Yermantarı':'f/f2/Truffle.png','Kavrulmuş Fındık':'1/18/Roasted_Hazelnuts.png','Acı Biber':'f/f1/Hot_Pepper.png','Güz Armağanı':'f/f4/Autumn%27s_Bounty.png','Soslanmış Tatlı Patates':'3/30/Glazed_Yams.png','Canavar Kokusu':'a/af/Monster_Musk.png','Boşluk Yumurtası':'5/58/Void_Egg.png','Boşluk Mayonezi':'f/f3/Void_Mayonnaise.png','Yabani Bayır Turpu':'9/90/Wild_Horseradish.png','Ara Sokak Büfesi':'3/3a/The_Alleyway_Buffet.png','Deniz Öğünü':'f/ff/Dish_O%27_The_Sea.png','Kaktüs Meyvesi':'3/32/Cactus_Fruit.png','Tatlı Patates':'5/52/Yam.png','Yaban Mersinli Turta':'9/9b/Blueberry_Tart.png','Çiftçi Öğünü':'7/79/Farmer%27s_Lunch.png','Kabak Tatlısı':'7/7d/Pumpkin_Pie.png','Pil':'2/25/Battery_Pack.png','Karnabahar':'a/aa/Cauliflower.png','Peynirli Karnabahar':'6/6e/Cheese_Cauliflower.png','Madenci Şekeri':'1/12/Miner%27s_Treat.png','Patlangaç Biber':'0/08/Pepper_Poppers.png','Radyoaktif Külçe':'7/7e/Radioactive_Bar.png','Haşhaş':'3/37/Poppy.png','Kavun':'1/19/Melon.png','Kızıl Tabak':'4/45/Red_Plate.png','Kök Tabağı':'e/e0/Roots_Platter.png','Kumbalığı':'b/bb/Sandfish.png','Bira':'b/b3/Beer.png','Likör':'8/84/Mead.png','Soluk Bira':'7/78/Pale_Ale.png','Yaban Havucu':'d/db/Parsnip.png','Yaban Havucu Çorbası':'7/76/Parsnip_Soup.png','Piña Colada':'1/12/Pi%C3%B1a_Colada.png','Şeftali':'e/e2/Peach.png','Çubuk Makarna':'0/08/Spaghetti.png','Ağaçkakanların Sırrı':'8/8b/Woody%27s_Secret.png','Fiyat Kataloğu':'d/d5/Price_Catalogue.png','Kalamar Tava':'2/25/Fried_Calamari.png','Donmuş Gözyaşı':'e/ec/Frozen_Tear.png','Kabak Çorbası':'5/59/Pumpkin_Soup.png','Kurbağa Yumurtası':'2/23/Green_Frog_Egg.png','Obsidyen':'2/23/Obsidian.png','Saşimi':'4/41/Sashimi.png','Pizza':'f/f4/Pizza.png','Kaplangözü':'6/6e/Tigerseye.png','Özlü Gözleme':'1/18/Maple_Bar.png','Kedibalığı':'9/99/Catfish.png','Ahtapot':'5/5a/Octopus.png','Denizhıyarı':'a/a9/Sea_Cucumber.png','Mersinbalığı':'4/42/Sturgeon.png','Yengeçleme Sanatı':'c/c6/The_Art_O%27_Crabbing.png','Denizin Mücevherleri':'7/7d/Jewels_Of_The_Sea.png','Kızılcık Şekeri':'9/9d/Cranberry_Candy.png','Zencefilli Gazoz':'1/1a/Ginger_Ale.png','Üzüm':'c/c2/Grape.png','Salyangoz':'d/d2/Snail.png','Çiğdem':'2/2f/Crocus.png','Fulya':'4/4b/Daffodil.png','Mangolu Pilav':'6/6e/Mango_Sticky_Rice.png','Itırşahi':'d/d9/Sweet_Pea.png','Gizem Kitabı':'d/df/Book_of_Mysteries.png','Mor Mantar':'4/4b/Purple_Mushroom.png','Güneş Özü':'f/f4/Solar_Essence.png','Büyük Denizhıyarı':'d/d5/Super_Cucumber.png','Boşluk Özü':'1/1f/Void_Essence.png'
+};
+const VIL = [
+ ['Abigail','Abigail','g',13,'en/8/88/Abigail.png',1,'Ametist;Böğürtlen Kobler;Çikolatalı Pasta;Balon Balığı;Bal Kabağı;Canavar Külliyatı;Baharatlı Yılanbalığı;Muzlu Muhallebi'],
+ ['Alex','Alex','y',13,'en/0/04/Alex.png',1,'Bütün Kahvaltı;Önüne, Arkana, Her Yanına Bak;Pişmiş Somon'],
+ ['Caroline','Caroline','k',7,'en/8/87/Caroline.png',0,'Balıklı Tako;Yeşil Çay;Yazpulu;Tropik Köri'],
+ ['Clint','Clint','k',26,'en/3/31/Clint.png',0,'Altın Külçesi;Ametist;Bütünjeot;Eğrelti Otlu Pilav;Enginar Ezmesi;Gök Zümrütü;İridyum Külçesi;Topaz;Yakut;Yeşim;Zümrüt'],
+ ['Demetrius','Demetrius','y',19,'en/f/f9/Demetrius.png',0,'Çilek;Dondurma;Fasulye Yahnisi;Sütlaç'],
+ ['Dwarf','Cüce','y',22,'en/e/ed/Dwarf.png',0,'Ametist;Gök Zümrütü;Zümrüt;Yeşim;Limontaşı;Bütünjeot;Yakut;Topaz'],
+ ['Elliott','Elliott','g',5,'en/b/bd/Elliott.png',1,'Istakoz;Mürekkepbalığı Mürekkebi;Nar;Ördek Tüyü;Tavuklu Ceviz Çorbası;Yengeçli Kek'],
+ ['Emily','Emily','b',27,'en/2/28/Emily.png',1,'Açburger;Ametist;Gök Zümrütü;Kumaş;Papağan Yumurtası;Topaz;Yakut;Yeşim;Yün;Zümrüt'],
+ ['Evelyn','Evelyn','k',20,'en/8/8e/Evelyn.png',0,'Pancar;Çikolatalı Pasta;Elmas;Perigülü;Doldurma;Lale'],
+ ['George','George','g',24,'en/7/78/George.png',0,'Mantar Kızartma;Pırasa'],
+ ['Gus','Gus','y',8,'en/5/52/Gus.png',0,'Balıklı Tako;Elmas;Kızarmış Salyangoz;Portakal;Tropik Köri'],
+ ['Haley','Haley','b',14,'en/1/1b/Haley.png',1,'Hindistan Cevizi;Meyve Salatası;Pembe Pasta;Ayçiçeği'],
+ ['Harvey','Harvey','k',14,'en/9/95/Harvey.png',1,'Kahve;Şarap;Süper Öğün;Turşu;Yermantarı Yağı'],
+ ['Jas','Jas','y',4,'en/5/55/Jas.png',0,'Eski Bebek;Peri Kutusu;Perigülü;Pembe Pasta;Erikli Muhallebi;Garip Bebek (yeşil);Garip Bebek (sarı)'],
+ ['Jodi','Jodi','g',11,'en/4/41/Jodi.png',0,'Çikolatalı Pasta;Çıtır Levrek;Elmas;Parmesanlı Patlıcan;Yılanbalığı Tava;Gözleme;Uşkun Turtası;Türlü'],
+ ['Kent','Kent','b',4,'en/9/99/Kent.png',0,'Eğrelti Otlu Pilav;Kavrulmuş Fındık'],
+ ['Krobus','Krobus','k',1,'en/7/71/Krobus.png',0,'Elmas;İridyum Külçesi;Canavar Külliyatı;Canavar Kokusu;Bal Kabağı;Boşluk Yumurtası;Boşluk Mayonezi;Yabani Bayır Turpu'],
+ ['Leah','Leah','k',23,'en/e/e6/Leah.png',1,'Haşhaşlı Kek;Keçi Peyniri;Salata;Şarap;Türlü;Vogda Kızartma;Yermantarı'],
+ ['Leo','Leo','y',26,'en/1/1d/Leo.png',0,'Ördek Tüyü;Mango;Deve Kuşu Yumurtası;Poi'],
+ ['Lewis','Lewis','b',7,'en/2/2b/Lewis.png',0,'Acı Biber;Güz Armağanı;Soslanmış Tatlı Patates;Türlü;Yeşil Çay'],
+ ['Linus','Linus','k',3,'en/3/31/Linus.png',0,'Ara Sokak Büfesi;Deniz Öğünü;Hindistan Cevizi;Kaktüs Meyvesi;Tatlı Patates;Yaban Mersinli Turta'],
+ ['Marnie','Marnie','g',18,'en/5/52/Marnie.png',0,'Elmas;Çiftçi Öğünü;Pembe Pasta;Kabak Tatlısı'],
+ ['Maru','Maru','y',10,'en/f/f8/Maru.png',1,'Pil;Karnabahar;Peynirli Karnabahar;Elmas;Altın Külçesi;İridyum Külçesi;Madenci Şekeri;Patlangaç Biber;Radyoaktif Külçe;Uşkun Turtası;Çilek'],
+ ['Pam','Pam','b',18,'en/d/da/Pam.png',0,'Bira;Kaktüs Meyvesi;Soslanmış Tatlı Patates;Likör;Soluk Bira;Yaban Havucu;Yaban Havucu Çorbası;Piña Colada'],
+ ['Penny','Penny','g',2,'en/a/ab/Penny.png',1,'Elmas;Haşhaş;Haşhaşlı Kek;Kavun;Kızıl Tabak;Kök Tabağı;Kumbalığı;Tavuklu Ceviz Çorbası;Zümrüt'],
+ ['Pierre','Pierre','b',26,'en/7/7e/Pierre.png',0,'Fiyat Kataloğu;Kalamar Tava'],
+ ['Robin','Robin','g',21,'en/1/1b/Robin.png',0,'Keçi Peyniri;Şeftali;Çubuk Makarna;Ağaçkakanların Sırrı'],
+ ['Sam','Sam','y',17,'en/9/94/Sam.png',1,'Kaktüs Meyvesi;Kaplangözü;Özlü Gözleme;Pizza'],
+ ['Sandy','Sandy','g',15,'en/4/4e/Sandy.png',0,'Çiğdem;Fulya;Mangolu Pilav;Itırşahi'],
+ ['Sebastian','Sebastian','k',10,'en/a/a8/Sebastian.png',1,'Boşluk Yumurtası;Donmuş Gözyaşı;Kabak Çorbası;Kurbağa Yumurtası;Obsidyen;Saşimi'],
+ ['Shane','Shane','b',20,'en/8/8b/Shane.png',1,'Bira;Acı Biber;Patlangaç Biber;Pizza'],
+ ['Vincent','Vincent','b',10,'en/f/f1/Vincent.png',0,'Kızılcık Şekeri;Kurbağa Yumurtası;Zencefilli Gazoz;Üzüm;Pembe Pasta;Salyangoz'],
+ ['Willy','Willy','y',24,'en/8/82/Willy.png',0,'Kedibalığı;Elmas;İridyum Külçesi;Likör;Ahtapot;Bal Kabağı;Denizhıyarı;Mersinbalığı;Yengeçleme Sanatı;Denizin Mücevherleri'],
+ ['Wizard','Büyücü','k',17,'en/c/c7/Wizard.png',0,'Gizem Kitabı;Mor Mantar;Güneş Özü;Büyük Denizhıyarı;Boşluk Özü'],
+].map(a => ({ id: a[0], n: a[1], s: a[2], d: a[3], pic: a[4], dt: a[5], love: a[6].split(';') }));
+
+const SK = ['b', 'y', 'g', 'k'], SN = { b: 'Bahar', y: 'Yaz', g: 'Güz', k: 'Kış' }, SI = { b: '🌸', y: '☀️', g: '🍂', k: '❄️' };
+const maxHearts = v => v.dt ? 8 : 10;     // Mükemmeliyet için gereken kalp: evlenilebilir 8, diğerleri 10
+
+// =====================================================================
+//  HEDİYELER SEKMESİ
+// =====================================================================
+let GS = load('sdv-gift-v1', { date: { s: 'b', d: 1 }, v: {} });
+const gv = id => GS.v[id] || (GS.v[id] = { t: 0, g: 0, w: 0, h: 0 });
+const gSave = () => store('sdv-gift-v1', GS);
+let gFilter = 'all', gSort = 'az', gSearch = '';
+const dayIndex = (s, d) => SK.indexOf(s) * 28 + d;
+const daysUntil = v => (dayIndex(v.s, v.d) - dayIndex(GS.date.s, GS.date.d) + 112) % 112;
+const untilTxt = n => n === 0 ? '🎉 BUGÜN!' : n === 1 ? 'yarın' : n + ' gün sonra';
+
+function renderGift() {
+  const el = $('#v-gift'), D = GS.date;
+  const today = VIL.filter(v => daysUntil(v) === 0);
+  const soon = VIL.filter(v => { const n = daysUntil(v); return n > 0 && n <= 7; }).sort((a, b) => daysUntil(a) - daysUntil(b));
+  const doneN = VIL.filter(v => gv(v.id).t && gv(v.id).g).length;
+  const gaveN = VIL.filter(v => gv(v.id).g).length;
+  let list = VIL.filter(v => {
+    const s = GS.v[v.id] || {};
+    if (gFilter === 'todo' && s.g) return false;
+    if (gFilter === 'done' && !s.g) return false;
+    if (gSearch) { const q = gSearch.toLowerCase(); if (!(v.n.toLowerCase().includes(q) || v.love.some(l => l.toLowerCase().includes(q)))) return false; }
+    return true;
+  });
+  list = list.slice().sort((a, b) => gSort === 'bd' ? daysUntil(a) - daysUntil(b) : a.n.localeCompare(b.n, 'tr'));
+  el.innerHTML = `
+  <div class="panel gtop">
+    <div class="gdate">
+      <b>📅 Bugün:</b>
+      <select id="gS">${SK.map(k => `<option value="${k}" ${D.s === k ? 'selected' : ''}>${SI[k]} ${SN[k]}</option>`).join('')}</select>
+      <select id="gD">${Array.from({ length: 28 }, (_, i) => `<option ${D.d === i + 1 ? 'selected' : ''}>${i + 1}</option>`).join('')}</select>
+      <span class="dim">(${['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'][(D.d - 1) % 7]})</span>
+    </div>
+    <div class="gbtns">
+      <button id="gNew" title="İşaretleri temizler, tarihi bir gün ilerletir; yeni haftada hafta sayaçlarını da sıfırlar">☀️ Yeni gün</button>
+      <button class="ghost" id="gClr" title="Tarihi değiştirmeden bugünkü işaretleri temizler">Bugünü sıfırla</button>
+      <button class="ghost" id="gWk" title="Haftalık hediye sayaçlarını sıfırlar">Haftayı sıfırla</button>
+    </div>
+    <div class="gstat">🎁 Bugün hediye verilen: <b>${gaveN}/${VIL.length}</b> · ✅ Hepsi tamam: <b>${doneN}</b></div>
+  </div>
+  ${today.length ? `<div class="panel bday">🎂 <b>Bugün doğum günü:</b> ${today.map(v => `<span class="bchip">${pimg(v.pic, '👤', 'mini')} ${v.n}</span>`).join(' ')} — Sevdiği bir hediye ver (8× dostluk puanı)!</div>` : ''}
+  ${soon.length ? `<div class="panel bsoon">🗓️ <b>Bu hafta doğum günü:</b> ${soon.map(v => `${v.n} <small>(${SI[v.s]} ${SN[v.s]} ${v.d} · ${untilTxt(daysUntil(v))})</small>`).join(' · ')}</div>` : ''}
+  <div class="gtools">
+    <input type="search" id="gQ" value="${esc(gSearch)}" placeholder="🔍 Köylü ya da hediye ara… (ör. Elmas)">
+    <select id="gF"><option value="all" ${gFilter === 'all' ? 'selected' : ''}>Hepsi</option><option value="todo" ${gFilter === 'todo' ? 'selected' : ''}>Hediye vermediklerim</option><option value="done" ${gFilter === 'done' ? 'selected' : ''}>Hediye verdiklerim</option></select>
+    <select id="gO"><option value="az" ${gSort === 'az' ? 'selected' : ''}>A → Z</option><option value="bd" ${gSort === 'bd' ? 'selected' : ''}>Yaklaşan doğum günü</option></select>
+  </div>
+  <div class="vgrid">${list.map(v => vcard(v)).join('') || '<div class="panel" style="padding:16px">Sonuç yok.</div>'}</div>
+  <div class="foot">Haftada en fazla 2 hediye (doğum gününde +1) verilir. Herkes ayrıca <i>evrensel sevilenleri</i> de sever (ör. Prizma Parçası, Tavşan Ayağı, İnci…); Haley Prizma Parçası'nı, Penny Tavşan Ayağı'nı sevmez. Veriler <a target="_blank" rel="noopener" href="https://tr.stardewvalleywiki.com/Hediyeler">Stardew Valley Wiki</a>'den.</div>`;
+}
+function vcard(v) {
+  const s = GS.v[v.id] || { t: 0, g: 0, w: 0, h: 0 }, n = daysUntil(v), mh = maxHearts(v);
+  const full = s.t && s.g;
+  return `<section class="panel vcard ${full ? 'full' : ''} ${n === 0 ? 'isb' : ''}" data-v="${v.id}">
+    <div class="vh">${pimg(v.pic, '👤', 'por')}<div><h3>${v.n}</h3><small>🎂 ${SI[v.s]} ${SN[v.s]} ${v.d} · ${untilTxt(n)}</small></div></div>
+    <div class="vbtn">
+      <button class="tg ${s.t ? 'on' : ''}" data-act="t">${s.t ? '✔' : '💬'} Konuştum</button>
+      <button class="tg ${s.g ? 'on' : ''}" data-act="g">${s.g ? '✔' : '🎁'} Hediye verdim</button>
+    </div>
+    <div class="vmeta"><span title="Bu hafta verilen hediye">📦 Hafta: <b>${s.w}/2</b></span>
+      <span class="hrt"><button data-act="hm">−</button> ❤ <b class="${s.h >= mh ? 'ok' : ''}">${s.h}/${mh}</b> <button data-act="hp">+</button></span></div>
+    <div class="lv"><span class="lt">Sevdiği hediyeler</span><div class="loves">${v.love.map(l => `<span class="gi" title="${esc(l)}">${GP[l] ? pimg(GP[l], '🎁') : '🎁'}<span>${l}</span></span>`).join('')}</div></div>
+  </section>`;
+}
+(function giftEvents() {
+  const el = $('#v-gift');
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.id === 'gNew') {
+      Object.values(GS.v).forEach(s => { s.t = 0; s.g = 0; });
+      let d = GS.date.d + 1, k = SK.indexOf(GS.date.s);
+      if (d > 28) { d = 1; k = (k + 1) % 4; }
+      GS.date = { s: SK[k], d };
+      if (d % 7 === 1) Object.values(GS.v).forEach(s => { s.w = 0; });   // 1., 8., 15., 22. gün = Pazartesi
+      gSave(); renderGift(); return;
+    }
+    if (b.id === 'gClr') { Object.values(GS.v).forEach(s => { s.t = 0; s.g = 0; }); gSave(); renderGift(); return; }
+    if (b.id === 'gWk') { Object.values(GS.v).forEach(s => { s.w = 0; }); gSave(); renderGift(); return; }
+    const card = b.closest('.vcard'); if (!card || !b.dataset.act) return;
+    const v = VIL.find(x => x.id === card.dataset.v), s = gv(v.id), a = b.dataset.act;
+    if (a === 't') s.t = s.t ? 0 : 1;
+    if (a === 'g') { s.g = s.g ? 0 : 1; s.w = clamp(s.w + (s.g ? 1 : -1), 0, 2); }
+    if (a === 'hp') s.h = clamp(s.h + 1, 0, 10);
+    if (a === 'hm') s.h = clamp(s.h - 1, 0, 10);
+    gSave();
+    const y = scrollY; renderGift(); scrollTo(0, y);
+  });
+  el.addEventListener('change', e => {
+    if (e.target.id === 'gS') GS.date.s = e.target.value;
+    else if (e.target.id === 'gD') GS.date.d = +e.target.value;
+    else if (e.target.id === 'gF') gFilter = e.target.value;
+    else if (e.target.id === 'gO') gSort = e.target.value;
+    else return;
+    gSave(); renderGift();
+  });
+  el.addEventListener('input', e => {
+    if (e.target.id !== 'gQ') return;
+    gSearch = e.target.value; const pos = e.target.selectionStart; renderGift();
+    const q = $('#gQ'); q.focus(); q.setSelectionRange(pos, pos);
+  });
+})();
+
+// =====================================================================
+//  MÜKEMMELİYET SEKMESİ
+// =====================================================================
+let PS = load('sdv-perf-v1', { n: {}, c: {}, x: {} });
+const pSave = () => store('sdv-perf-v1', PS);
+const WIKI_TR = 'https://stardewvalleywiki.com/';
+const OBELISKS = [
+  ['ob1', 'Yeryüzü Dikilitaşı (Earth)', '500.000g + 10 İridyum Külçesi + 10 Yüzey Kristali'],
+  ['ob2', 'Su Dikilitaşı (Water)', '500.000g + 5 İridyum Külçesi + 10 Deniz Tarağı + 10 Mercan'],
+  ['ob3', 'Çöl Dikilitaşı (Desert)', '1.000.000g + 20 İridyum Külçesi + 10 Hindistan Cevizi'],
+  ['ob4', 'Ada Dikilitaşı (Island)', '1.000.000g + 10 Ejderha Dişi + 10 İridyum Külçesi + 10 Muz'],
+];
+const SLAYER = [
+  ['sl1', 'Balçıkçalar (Slimes)', 1000], ['sl2', 'Boşluk Ruhları (Void Spirits)', 150], ['sl3', 'Yarasalar (Bats)', 200], ['sl4', 'İskeletler', 50],
+  ['sl5', 'Mağara Böcekleri', 125], ['sl6', 'Duggy\'ler', 30], ['sl7', 'Toz Ruhları (Dust Sprites)', 500], ['sl8', 'Kaya Yengeçleri', 60],
+  ['sl9', 'Mumyalar', 100], ['sl10', 'Biber Rex (Pepper Rex)', 50], ['sl11', 'Yılanlar (Serpents)', 250], ['sl12', 'Magma Ruhları (Magma Sprites)', 150],
+];
+const SKILLS = [['sk1', '🌾 Çiftçilik'], ['sk2', '⛏️ Madencilik'], ['sk3', '🌲 Toplayıcılık'], ['sk4', '🎣 Balıkçılık'], ['sk5', '⚔️ Dövüş']];
+const DROPS = [
+  ['sd1', 'Yıldız Panayırı\'nda 2.000 yıldız jetonuna satılır', 'Güz 16'],
+  ['sd2', 'Madenler 100. kat sandığı', ''],
+  ['sd3', 'Eşin / oda arkadaşın 12,5 kalbe ulaşınca verir', ''],
+  ['sd4', 'Krobus 20.000g\'ye satar (Kanalizasyon)', ''],
+  ['sd5', 'Gizli Koru\'daki Yaşlı Usta Cannoli\'ye Tatlıtaş Meyvesi (Sweet Gem Berry) ver', ''],
+  ['sd6', 'Usta Balıkçı (Master Angler) başarımı → ertesi gün Willy mektup yollar', ''],
+  ['sd7', 'Müzeye 95 eşyanın hepsini bağışla', ''],
+];
+const COUNTERS = [
+  ['ship', '📦', 'Gönderilen Ürünler', 154, 15, 'Koleksiyonlar menüsü > Gönderilenler (Çiftlik & Toplayıcılık): her üründen en az 1 tane sevkiyat kutusuna at.', 'Shipping'],
+  ['cook', '🍳', 'Yapılan Yemek Tarifleri', 81, 10, 'Her tarifi bir kez pişir (öğrenmek yetmez!). Tarifler dostluk, Kraliçe Sosu (TV), Gus ve başarımlarla gelir.', 'Cooking'],
+  ['craft', '🔨', 'Üretilen Eşyalar (Crafting)', 149, 10, 'Tüm üretim tariflerini üret. Evlilik Yüzüğü gerekmez.', 'Crafting'],
+  ['fish', '🐟', 'Yakalanan Balıklar', 72, 10, 'Koleksiyonlar > Balık sekmesindeki tüm balıklar. Yengeç çömleği balıkları da sayılır.', 'Fish'],
+  ['wal', '🥜', 'Altın Cevizler', 130, 5, 'Zencefil Adası\'nda: gömülü yerler, bitkiler, maymun, görevler… Papağanlara cevizle alan açılır.', 'Golden_Walnut'],
+];
+const EXTRAS = [
+  ['🎬 Sinema Salonu', [
+    ['mv1', 'Topluluk Merkezi\'ni tamamla (30 paket) — ya da JojaMart yolu', 'Paketler 1. sekmede.'],
+    ['mv2', 'Terk edilmiş JojaMart\'ta "Kayıp Yığın"ı (Missing Bundle) tamamla', 'Topluluk Merkezi tamamlanınca bir sonraki yağmurlu günden sonra açılır. 1. sekmede takip edebilirsin.'],
+    ['mv3', 'Ertesi gün Junimo\'lar Sinema\'yı inşa eder', 'Haftada bir kez film izleyebilir, köylüyle birlikte gidebilirsin (dostluk puanı!).'],
+  ]],
+  ['🏝️ Zencefil Adası', [
+    ['gi1', 'Willy\'nin dükkanının arka odasındaki tekneyi onar', 'Kereste, İridyum Külçesi ve Pil gerekir.'],
+    ['gi2', 'Adaya ilk yolculuk (bilet 1.000g)', ''],
+    ['gi3', 'Papağan Ekspres\'i aç (hızlı yolculuk) ve Ada\'daki alanları cevizle aç', ''],
+    ['gi4', 'Ada Çiftliği\'ni (Island Farm) aç', ''],
+    ['gi5', 'Volkan Zindanı\'nı (Volcano Dungeon) keşfet', ''],
+    ['gi6', 'Qi\'nin Ceviz Odası\'nı (Walnut Room) aç', 'Mükemmeliyet Takipçisi burada.'],
+    ['gi7', 'Leo\'yu tanış ve arkadaş ol', 'Köylü sayılır — dostluk 10 kalp gerekir.'],
+    ['gi8', 'Fizz\'den Mükemmeliyet Muafiyeti (Perfection Waiver) al', 'Her biri 500.000g, %1 ekler.'],
+  ]],
+  ['💞 İlişkiler', [
+    ['rl1', 'Biriyle çıkmaya başla (Buket)', ''],
+    ['rl2', 'Evlenmek (Mermaid Kolyesi) ya da oda arkadaşı olmak', 'Eş 12,5 kalbe çıkınca Yıldızdamlası verir.'],
+    ['rl3', 'Çocuk sahibi ol', 'Çocukların dostluğu Mükemmeliyete sayılmaz.'],
+    ['rl4', 'Tüm köylülerle Mükemmeliyet kalbine ulaş', 'Hediyeler sekmesinde 34 köylü takip edilir.'],
+  ]],
+  ['⭐ Diğer hedefler', [
+    ['ot1', 'Müzeyi tamamla (95 eşya)', 'Yıldızdamlası verir.'],
+    ['ot2', 'Büyükbabanın Hatırası\'ndan 4 mum al', 'Çiftlik haritasında Büyükbaba Sunağı.'],
+    ['ot3', 'Çiftlik Binaları: Büyücü Kulesi\'nden Junimo Kulübesi, Dikilitaşlar', 'Dikilitaşlar için Büyücü\'yle dostluk gerekir.'],
+    ['ot4', 'Kafatası Mağarası\'nı tamamla', 'Altın Hindistan Cevizi, İridyum Külçesi.'],
+    ['ot5', 'Usta Balıkçı başarımı (tüm balıkları yakala)', 'Yıldızdamlası verir.'],
+  ]],
+];
+
+function pcount(k, max) { return clamp(+PS.n[k] || 0, 0, max); }
+function perfScore() {
+  const s = {};
+  s.ship = pcount('ship', 154) / 154 * 15;
+  s.obe = OBELISKS.filter(o => PS.c[o[0]]).length / 4 * 4;
+  s.clk = PS.c.clock ? 10 : 0;
+  s.slay = SLAYER.filter(o => PS.c[o[0]]).length / 12 * 10;
+  s.fri = VIL.filter(v => (GS.v[v.id] ? GS.v[v.id].h : 0) >= maxHearts(v)).length / 34 * 11;
+  s.lvl = SKILLS.reduce((a, o) => a + clamp(+PS.n[o[0]] || 0, 0, 10), 0) / 50 * 5;
+  s.sd = DROPS.filter(o => PS.c[o[0]]).length / 7 * 10;
+  s.cook = pcount('cook', 81) / 81 * 10;
+  s.craft = pcount('craft', 149) / 149 * 10;
+  s.fish = pcount('fish', 72) / 72 * 10;
+  s.wal = pcount('wal', 130) / 130 * 5;
+  s.total = Object.values(s).reduce((a, b) => a + b, 0);
+  return s;
+}
+const cbox = (key, label, sub, ns = 'c') => `<label class="ck ${PS[ns][key] ? 'on' : ''}"><input type="checkbox" data-ck="${key}" data-ns="${ns}" ${PS[ns][key] ? 'checked' : ''}><span class="bx">✔</span><span class="tx">${label}${sub ? `<small>${sub}</small>` : ''}</span></label>`;
+function pcard(ico, title, got, tot, w, body, extra = '') {
+  const p = tot ? got / tot : 0;
+  return `<section class="panel pcard ${p >= 1 ? 'done' : ''}">
+    <div class="ph"><span class="pi">${ico}</span><h3>${title}</h3><span class="pw">%${w}</span><span class="pv">${got}/${tot}</span></div>
+    <div class="pbar"><i style="width:${Math.min(100, p * 100)}%"></i></div>
+    <div class="pb">${body}${extra}</div></section>`;
+}
+function renderPerf() {
+  const S = perfScore(), el = $('#v-perf');
+  const fr = VIL.filter(v => (GS.v[v.id] ? GS.v[v.id].h : 0) >= maxHearts(v)).length;
+  const pend = VIL.filter(v => (GS.v[v.id] ? GS.v[v.id].h : 0) < maxHearts(v));
+  const counter = c => {
+    const [k, ico, t, max, w, hint, wp] = c, n = pcount(k, max);
+    return pcard(ico, t, n, max, w, `<div class="cnt"><button data-cn="${k}" data-d="-10">−10</button><button data-cn="${k}" data-d="-1">−1</button>
+      <input type="number" min="0" max="${max}" value="${n}" data-ci="${k}" data-max="${max}"><button data-cn="${k}" data-d="1">+1</button><button data-cn="${k}" data-d="10">+10</button></div>
+      <p class="hint">${hint} <a target="_blank" rel="noopener" href="${WIKI_TR}${wp}">Wiki ↗</a></p>`);
+  };
+  el.innerHTML = `
+  <div class="panel poverall"><div class="big">${S.total.toFixed(1).replace('.', ',')}%</div>
+    <div class="bar ${S.total >= 99.95 ? 'gold' : ''}"><i style="width:${Math.min(100, S.total)}%"></i></div>
+    <div class="ptxt">${S.total >= 99.95 ? '🎉 MÜKEMMELİYET!' : 'Qi\'nin Ceviz Odası\'ndaki Mükemmeliyet Takipçisi ile aynı hesap'}</div></div>
+  <div class="note">Aşağıdaki kutuları ve sayaçları kendin güncelle; ilerleme tarayıcında saklanır. Dostluk kısmı <b>Hediyeler</b> sekmesindeki ❤ sayacından otomatik gelir.</div>
+  <div class="pgrid">
+  ${counter(COUNTERS[0])}
+  ${pcard('🗿', 'Çiftlikteki Dikilitaşlar', OBELISKS.filter(o => PS.c[o[0]]).length, 4, 4, `<div class="cks">${OBELISKS.map(o => cbox(o[0], o[1], o[2])).join('')}</div><p class="hint">Büyücü Kulesi\'nden yaptırılır. Kâğıt üstünde pahalı: Muafiyet (Perfection Waiver) almak daha ucuz olabilir.</p>`)}
+  ${pcard('🕰️', 'Altın Saat (Gold Clock)', PS.c.clock ? 1 : 0, 1, 10, `<div class="cks">${cbox('clock', 'Çiftliğe Altın Saat inşa et', '10.000.000g — Büyücü\'nden')}</div>`)}
+  ${pcard('⚔️', 'Canavar Avcısı Kahramanı', SLAYER.filter(o => PS.c[o[0]]).length, 12, 10, `<div class="cks">${SLAYER.map(o => cbox(o[0], o[1], 'Hedef: ' + o[2] + ' adet')).join('')}</div><p class="hint">Maceracılar Loncası (Marlon). Hedefleri tamamlayınca Marlon\'a uğra.</p>`)}
+  ${pcard('🤝', 'Büyük Dostluklar', fr, 34, 11, `<p class="hint">Evlenilebilir köylüler <b>8 ❤</b>, diğerleri <b>10 ❤</b> olmalı (Kent dahil — 1. yılda bitmez). Kalpleri <b>Hediyeler</b> sekmesinde işaretle.</p>
+     ${pend.length ? `<div class="pend"><b>Eksik olanlar (${pend.length}):</b> ${pend.map(v => `<span>${v.n} <small>${(GS.v[v.id] ? GS.v[v.id].h : 0)}/${maxHearts(v)}</small></span>`).join('')}</div>` : '<p class="ok">Hepsi tamam! 💖</p>'}
+     <button class="go" data-go="gift">Hediyeler sekmesine git →</button>`)}
+  ${pcard('📈', 'Çiftçi Seviyesi', SKILLS.reduce((a, o) => a + clamp(+PS.n[o[0]] || 0, 0, 10), 0), 50, 5, `<div class="sk">${SKILLS.map(o => `<div class="skr"><span>${o[1]}</span><button data-sk="${o[0]}" data-d="-1">−</button><b>${clamp(+PS.n[o[0]] || 0, 0, 10)}/10</b><button data-sk="${o[0]}" data-d="1">+</button></div>`).join('')}</div><p class="hint">Beş becerinin hepsi 10. seviye olmalı.</p>`)}
+  ${pcard('🌟', 'Yıldızdamlaları', DROPS.filter(o => PS.c[o[0]]).length, 7, 10, `<div class="cks">${DROPS.map(o => cbox(o[0], o[1], o[2])).join('')}</div><p class="hint">Her biri +34 enerji. Toplam 7 tane var. <a target="_blank" rel="noopener" href="${WIKI_TR}Stardrop">Wiki ↗</a></p>`)}
+  ${counter(COUNTERS[1])}${counter(COUNTERS[2])}${counter(COUNTERS[3])}${counter(COUNTERS[4])}
+  </div>
+  <h2 class="sec">🧭 Mükemmeliyet dışında ama lazım olanlar</h2>
+  <div class="pgrid">${EXTRAS.map(([t, items]) => `<section class="panel pcard"><div class="ph"><h3>${t}</h3><span class="pv">${items.filter(i => PS.x[i[0]]).length}/${items.length}</span></div><div class="pb"><div class="cks">${items.map(i => cbox(i[0], i[1], i[2], 'x')).join('')}</div></div></section>`).join('')}</div>
+  <div class="foot">Mükemmeliyet puanı: Gönderim %15 · Dikilitaş %4 · Altın Saat %10 · Canavar Avcısı %10 · Dostluk %11 · Seviye %5 · Yıldızdamlası %10 · Yemek %10 · Üretim %10 · Balık %10 · Altın Ceviz %5.
+  Kaynak: <a target="_blank" rel="noopener" href="https://stardewvalleywiki.com/Perfection">Stardew Valley Wiki – Perfection</a>. Eksiklerini kaydından görmek için <a target="_blank" rel="noopener" href="https://mouseypounds.github.io/stardew-checkup/">Stardew Checkup</a> aracı da işe yarar.</div>`;
+}
+(function perfEvents() {
+  const el = $('#v-perf');
+  el.addEventListener('change', e => {
+    const t = e.target;
+    if (t.dataset.ck) { PS[t.dataset.ns][t.dataset.ck] = t.checked ? 1 : 0; pSave(); const y = scrollY; renderPerf(); scrollTo(0, y); }
+    else if (t.dataset.ci) { PS.n[t.dataset.ci] = clamp(Math.round(+t.value || 0), 0, +t.dataset.max); pSave(); const y = scrollY; renderPerf(); scrollTo(0, y); }
+  });
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.go) { setView(b.dataset.go); scrollTo(0, 0); return; }
+    let k = b.dataset.cn || b.dataset.sk; if (!k) return;
+    const max = b.dataset.cn ? COUNTERS.find(c => c[0] === k)[3] : 10;
+    PS.n[k] = clamp((+PS.n[k] || 0) + (+b.dataset.d), 0, max); pSave();
+    const y = scrollY; renderPerf(); scrollTo(0, y);
+  });
+})();
+
+setView(view);
+
+</script>
+</body>
+</html>
